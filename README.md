@@ -1,6 +1,6 @@
 # Chrome Netflix parallel translation extension
 
-This Chrome extension adds real-time translation capabilities to Netflix subtitles, allowing users to view subtitles in their preferred language during language learning, for example.
+This Chrome extension adds real-time translation capabilities to Netflix subtitles, allowing users to view parallel subtitles in their preferred language during language learning, for example.
 
 <div align="center">
   <img src="images/netflix.jpg" alt="Netflix example" width="50%">
