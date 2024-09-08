@@ -25,7 +25,7 @@ This Chrome extension adds real-time translation capabilities to Netflix subtitl
 
 ## Configuration
 
-The extension currently uses a local LibreTranslate server for translations. The server URL is hardcoded in the `content.js` file:
+The extension currently uses a local LibreTranslate server for translations. The server URL is hardcoded in the `translate.js` file:
 
 ```javascript
 const apiUrl = 'http://localhost:5000/translate';  // LibreTranslate server URL
