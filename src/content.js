@@ -10,16 +10,18 @@ let settings = {
 
 let originalSubtitleElement = null;
 let translatedSubtitleElement = null;
-let lastOriginalText = ''; // Store the last original subtitle text
+let lastOriginalText = '';
 
 function createTranslatedSubtitleElement() {
   if (!translatedSubtitleElement) {
     translatedSubtitleElement = document.createElement('div');
     translatedSubtitleElement.id = 'translated-subtitle';
-    translatedSubtitleElement.style.position = 'absolute';
-    translatedSubtitleElement.style.width = '100%';
+    translatedSubtitleElement.style.position = 'fixed'; // Change to fixed positioning
+    translatedSubtitleElement.style.left = '0';
+    translatedSubtitleElement.style.right = '0';
     translatedSubtitleElement.style.textAlign = 'center';
     translatedSubtitleElement.style.color = 'yellow';
+    translatedSubtitleElement.style.zIndex = '9999999'; // Ensure it's on top of other elements
     document.body.appendChild(translatedSubtitleElement);
     console.log('Translated subtitle element created');
   }
@@ -145,10 +147,28 @@ function initializeTranslation() {
     });
     observer.observe(originalSubtitleElement, { childList: true, subtree: true, characterData: true });
     console.log('MutationObserver set up for:', originalSubtitleElement);
+
+    // Add full-screen change event listener
+    document.addEventListener('fullscreenchange', handleFullScreenChange);
+    console.log('Full-screen change event listener added');
   } else {
     console.log('Subtitles not found. Retrying in 1 second...');
     setTimeout(initializeTranslation, 1000);
   }
+}
+
+function handleFullScreenChange() {
+  console.log('Full-screen state changed');
+  if (document.fullscreenElement) {
+    console.log('Entered full-screen mode');
+    // Ensure the translated subtitle element is a child of the fullscreen element
+    document.fullscreenElement.appendChild(translatedSubtitleElement);
+  } else {
+    console.log('Exited full-screen mode');
+    // Move the translated subtitle element back to the body
+    document.body.appendChild(translatedSubtitleElement);
+  }
+  updateSubtitleStyles(); // Reapply styles after moving the element
 }
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
