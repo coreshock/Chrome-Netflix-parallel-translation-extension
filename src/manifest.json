@@ -6,12 +6,15 @@
   "permissions": [
     "storage",
     "scripting",
-    "tabs"
+    "tabs",
+    "nativeMessaging",
+    "management",
+    "notifications"
   ],
   "host_permissions": [
     "*://*.netflix.com/*",
     "*://*.youtube.com/*",
-    "https://api.mymemory.translated.net/"
+    "http://localhost:5000/"
   ],
   "action": {
     "default_popup": "popup.html",

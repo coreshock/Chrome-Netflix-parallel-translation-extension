@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LibreTranslate Server Setup Instructions</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+    pre { background-color: #f4f4f4; padding: 10px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h1>LibreTranslate Server Setup Instructions</h1>
+  
+  <h2>Installing LibreTranslate on Windows</h2>
+  <ol>
+    <li>Install Python 3.7 or higher from <a href="https://www.python.org/downloads/" target="_blank">python.org</a></li>
+    <li>Open Command Prompt as Administrator</li>
+    <li>Install LibreTranslate:
+      <pre>pip install libretranslate</pre>
+    </li>
+  </ol>
+
+  <h2>Running LibreTranslate Server</h2>
+  <ol>
+    <li>Create a batch file named <code>run_libretranslate.bat</code> with the following content:
+      <pre>
+@echo off
+echo Starting LibreTranslate server...
+libretranslate --host 127.0.0.1 --port 5000
+pause
+      </pre>
+    </li>
+    <li>Double-click the <code>run_libretranslate.bat</code> file to start the server</li>
+    <li>You should see output indicating that the server is running</li>
+  </ol>
+
+  <h2>Automating Server Management</h2>
+  <p>This extension can manage the LibreTranslate server automatically. To enable this feature:</p>
+  <ol>
+    <li>Create a file named <code>libretranslate_server_manager.json</code> in the following location:
+      <pre>C:\Users\YourUsername\AppData\Local\Google\Chrome\User Data\NativeMessagingHosts\</pre>
+    </li>
+    <li>Add the following content to the file (replace <code>YourUsername</code> with your actual Windows username):
+      <pre>
+{
+  "name": "com.example.libretranslate_server",
+  "description": "LibreTranslate Server Manager",
+  "path": "C:\\Users\\YourUsername\\AppData\\Local\\Programs\\Python\\Python39\\pythonw.exe",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://your-extension-id/"
+  ]
+}
+      </pre>
+    </li>
+    <li>Create a Python script named <code>libretranslate_server_manager.py</code> in the same directory as the batch file:
+      <pre>
+import sys
+import json
+import subprocess
+
+def launch_server():
+    subprocess.Popen(["libretranslate", "--host", "127.0.0.1", "--port", "5000"])
+    return {"success": True}
+
+def stop_server():
+    subprocess.run(["taskkill", "/F", "/IM", "libretranslate.exe"])
+    return {"success": True}
+
+def main():
+    while True:
+        message = sys.stdin.readline()
+        try:
+            data = json.loads(message)
+            if data["action"] == "launch":
+                result = launch_server()
+            elif data["action"] == "stop":
+                result = stop_server()
+            else:
+                result = {"success": False, "error": "Unknown action"}
+            sys.stdout.write(json.dumps(result) + "\n")
+            sys.stdout.flush()
+        except Exception as e:
+            sys.stdout.write(json.dumps({"success": False, "error": str(e)}) + "\n")
+            sys.stdout.flush()
+
+if __name__ == "__main__":
+    main()
+      </pre>
+    </li>
+  </ol>
+
+  <p>After setting up these files, you can use the "Launch Server" and "Stop Server" buttons in the extension popup to manage the LibreTranslate server.</p>
+</body>
+</html>
