@@ -3,40 +3,66 @@
 <head>
   <title>Subtitle Translator Settings</title>
   <style>
-    body { width: 300px; padding: 10px; }
-    select, input { margin-bottom: 10px; }
+    body { width: 300px; padding: 10px; font-family: Arial, sans-serif; }
+    .slider-container { display: flex; align-items: center; margin-bottom: 10px; }
+    .slider-container input[type="range"] { flex-grow: 1; margin-right: 10px; }
+    .slider-container input[type="number"] { width: 50px; }
+    .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #2196F3; }
+    input:checked + .slider:before { transform: translateX(26px); }
+    #resetDefaults { margin-top: 10px; }
   </style>
 </head>
 <body>
   <h2>Subtitle Translator Settings</h2>
-  <label for="enabled">Enable translation:</label>
-  <input type="checkbox" id="enabled"><br>
-
-  <label for="sourceLang">Source language:</label>
+  
+  <label class="switch">
+    <input type="checkbox" id="enableTranslation">
+    <span class="slider"></span>
+  </label>
+  <span>Enable Translation</span>
+  
+  <h3>Languages</h3>
   <select id="sourceLang">
     <option value="de">German</option>
     <option value="en">English</option>
     <option value="fr">French</option>
     <option value="es">Spanish</option>
     <option value="it">Italian</option>
-  </select><br>
-  
-  <label for="targetLang">Target language:</label>
+    <option value="pl">Polish</option>
+    <option value="ru">Russian</option>
+  </select>
   <select id="targetLang">
     <option value="en">English</option>
-    <option value="ru">Russian</option>
-    <option value="pl">Polish</option>
     <option value="de">German</option>
-  </select><br>
+    <option value="fr">French</option>
+    <option value="es">Spanish</option>
+    <option value="it">Italian</option>
+    <option value="pl">Polish</option>
+    <option value="ru">Russian</option>
+  </select>
   
-  <label for="fontSize">Font size (px):</label>
-  <input type="number" id="fontSize" min="10" max="60" value="40"><br>
+  <h3>Font Settings</h3>
+  <div class="slider-container">
+    <label for="fontSize">Size:</label>
+    <input type="range" id="fontSizeSlider" min="1" max="60" value="40">
+    <input type="number" id="fontSize" min="1" max="60" value="40">
+  </div>
   
-  <label for="verticalPosition">Vertical position (px):</label>
-  <input type="number" id="verticalPosition" min="0" max="200" value="60"><br>
+  <div class="slider-container">
+    <label for="verticalPosition">Position:</label>
+    <input type="range" id="verticalPositionSlider" min="-80" max="80" value="60">
+    <input type="number" id="verticalPosition" min="-80" max="80" value="60">
+  </div>
   
-  <button id="save">Save Settings</button>
-  
+  <label for="fontColor">Color:</label>
+  <input type="color" id="fontColor" value="#ffff00">
+
+  <button id="resetDefaults">Reset to Defaults</button>
+
   <script src="popup.js"></script>
 </body>
 </html>
