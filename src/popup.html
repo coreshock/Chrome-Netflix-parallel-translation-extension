@@ -11,7 +11,7 @@
   <h2>Subtitle Translator Settings</h2>
   <label for="enabled">Enable translation:</label>
   <input type="checkbox" id="enabled"><br>
-
+  
   <label for="sourceLang">Source language:</label>
   <select id="sourceLang">
     <option value="de">German</option>
@@ -36,6 +36,12 @@
   <input type="number" id="verticalPosition" min="0" max="200" value="60"><br>
   
   <button id="save">Save Settings</button>
+  <hr>
+  <button id="checkServer">Check Server Status</button>
+  <button id="launchServer">Launch Server</button>
+  <button id="stopServer">Stop Server</button>
+  <p id="serverStatus"></p>
+  <a href="launch_server.html" target="_blank">Server Setup Instructions</a>
   
   <script src="popup.js"></script>
 </body>
