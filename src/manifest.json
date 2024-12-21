@@ -5,12 +5,14 @@
   "description": "Adds parallel translation to Netflix subtitles",
   "permissions": [
     "storage",
+    "activeTab",
     "scripting",
     "tabs"
   ],
   "host_permissions": [
     "*://*.netflix.com/*",
     "*://*.youtube.com/*",
+    "https://translate.google.com/*",
     "https://api.mymemory.translated.net/"
   ],
   "icons": {
