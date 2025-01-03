@@ -1,105 +1,60 @@
-console.log('Subtitle Translator content script loaded');
+let lastSubtitle = '';
+let translationDiv = null;
+let debugDiv = null;
 
-let settings = {
-  enabled: false,
-  sourceLang: 'de',
-  targetLang: 'en',
-  fontSize: 40,
-  verticalPosition: 60,
-  fontColor: '#ffff00'
-};
-
-let originalSubtitleElement = null;
-let translatedSubtitleElement = null;
-let lastSanitizedText = '';
-
-const debouncedTranslateSubtitles = debounce(async () => {
-  if (!settings.enabled || !originalSubtitleElement) {
-    console.log('Translation not performed. Enabled:', settings.enabled, 'Original subtitle element:', originalSubtitleElement);
-    clearTranslatedSubtitle(translatedSubtitleElement);
-    return;
-  }
-
-  const originalText = originalSubtitleElement.textContent.trim();
-  const sanitizedText = sanitizeSubtitleText(originalText);
-
-  if (sanitizedText === '') {
-    clearTranslatedSubtitle(translatedSubtitleElement);
-    lastSanitizedText = '';
-    return;
-  }
-
-  if (sanitizedText === lastSanitizedText) {
-    console.log('No new subtitle detected, skipping translation.');
-    return;
-  }
-
-  lastSanitizedText = sanitizedText;
-
-  try {
-    const translatedText = await translateText(sanitizedText, settings.sourceLang, settings.targetLang);
-    console.log('Translated subtitle:', translatedText);
-    if (translatedSubtitleElement) {
-      translatedSubtitleElement.textContent = translatedText;
+function debugLog(message) {
+    if (!debugDiv) {
+        debugDiv = document.createElement('div');
+        debugDiv.className = 'debug-container';
+        document.body.appendChild(debugDiv);
     }
-  } catch (error) {
-    console.error('Translation failed:', error);
-    clearTranslatedSubtitle(translatedSubtitleElement);
-  }
-}, 300);
-
-function initializeTranslation() {
-  console.log('Initializing translation');
-  originalSubtitleElement = detectSubtitles();
-  if (originalSubtitleElement) {
-    translatedSubtitleElement = createTranslatedSubtitleElement();
-    updateSubtitleStyles(translatedSubtitleElement, settings);
-
-    const observer = new MutationObserver(() => {
-      debouncedTranslateSubtitles();
-    });
-    observer.observe(originalSubtitleElement, { childList: true, subtree: true, characterData: true });
-    console.log('MutationObserver set up for:', originalSubtitleElement);
-
-    document.addEventListener('fullscreenchange', handleFullScreenChange);
-    console.log('Full-screen change event listener added');
-  } else {
-    console.log('Subtitles not found. Retrying in 1 second...');
-    setTimeout(initializeTranslation, 1000);
-  }
+    const time = new Date().toLocaleTimeString();
+    debugDiv.innerHTML += `${time}: ${message}<br>`;
+    debugDiv.scrollTop = debugDiv.scrollHeight;
+    console.log(`Debug: ${message}`);
 }
 
-function handleFullScreenChange() {
-  console.log('Full-screen state changed');
-  if (document.fullscreenElement) {
-    console.log('Entered full-screen mode');
-    document.fullscreenElement.appendChild(translatedSubtitleElement);
-  } else {
-    console.log('Exited full-screen mode');
-    document.body.appendChild(translatedSubtitleElement);
-  }
-  updateSubtitleStyles(translatedSubtitleElement, settings);
+function createTranslationContainer() {
+    debugLog('Creating translation container');
+    translationDiv = document.createElement('div');
+    translationDiv.className = 'translation-container';
+    const textDiv = document.createElement('div');
+    textDiv.className = 'translation-text';
+    translationDiv.appendChild(textDiv);
+    document.body.appendChild(translationDiv);
+    debugLog('Translation container created');
 }
 
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  if (request.action === "updateSettings") {
-    settings = request.settings;
-    console.log('Settings updated:', settings);
-    updateSubtitleStyles(translatedSubtitleElement, settings);
-    if (!settings.enabled) {
-      clearTranslatedSubtitle(translatedSubtitleElement);
-    } else {
-      debouncedTranslateSubtitles();
+function updateTranslation(translation) {
+    debugLog(`Updating translation: ${translation}`);
+    const textDiv = translationDiv.querySelector('.translation-text');
+    textDiv.textContent = translation;
+}
+
+function checkForSubtitles() {
+    const subtitleElement = document.querySelector('.player-timedtext-text-container');
+    debugLog(`Subtitle element found: ${!!subtitleElement}`);
+    
+    if (subtitleElement) {
+        const currentSubtitle = subtitleElement.textContent.trim();
+        debugLog(`Current subtitle: ${currentSubtitle}`);
+        
+        if (currentSubtitle && currentSubtitle !== lastSubtitle) {
+            lastSubtitle = currentSubtitle;
+            debugLog('Sending subtitle for translation');
+            chrome.runtime.sendMessage({text: currentSubtitle});
+        }
     }
-  }
+}
+
+debugLog('Extension initialized');
+createTranslationContainer();
+const checkInterval = setInterval(checkForSubtitles, 1000);
+debugLog('Subtitle check interval started');
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.translation) {
+        debugLog(`Received translation: ${message.translation}`);
+        updateTranslation(message.translation);
+    }
 });
-
-console.log('Attempting initial translation setup');
-initializeTranslation();
-
-setInterval(() => {
-  if (!originalSubtitleElement) {
-    console.log('Periodic check: Attempting to detect subtitles');
-    initializeTranslation();
-  }
-}, 5000);

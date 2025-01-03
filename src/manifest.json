@@ -1,44 +1,18 @@
 {
   "manifest_version": 3,
-  "name": "Subtitle Translator for Netflix subtitles using local Libretranslate server",
+  "name": "Netflix Subtitle Translator",
   "version": "1.0",
-  "description": "Adds parallel translation to Netflix subtitles",
-  "permissions": [
-    "storage",
-    "activeTab",
-    "scripting",
-    "tabs"
-  ],
-  "host_permissions": [
-    "*://*.netflix.com/*",
-    "*://*.youtube.com/*",
-    "https://translate.google.com/*",
-    "https://api.mymemory.translated.net/"
-  ],
-  "icons": {
-    "16": "images/extension_icon16.png",
-    "32": "images/extension_icon32.png",
-    "48": "images/extension_icon48.png",
-    "128": "images/extension_icon128.png"
-  },
+  "permissions": ["scripting", "activeTab", "storage", "tabs"],
+  "host_permissions": ["*://*.google.com/*", "*://*.netflix.com/*"],
   "action": {
-    "default_popup": "popup.html",
-    "default_icon": "images/extension_icon32.png"
+    "default_popup": "popup.html"
   },
+  "content_scripts": [{
+    "matches": ["*://*.netflix.com/*"],
+    "css": ["styles.css"],
+    "js": ["content.js"]
+  }],
   "background": {
     "service_worker": "background.js"
-  },
-  "content_scripts": [
-    {
-      "matches": ["*://*.netflix.com/*", "*://*.youtube.com/*"],
-      "js": [
-        "utils.js",
-        "subtitle-detection.js",
-        "translate.js",
-        "ui-manipulation.js",
-        "content.js"
-      ],
-      "css": ["styles.css"]
-    }
-  ]
+  }
 }
