@@ -11,7 +11,7 @@ This Chrome extension adds real-time translation capabilities to Netflix subtitl
 - Real-time translation of Netflix subtitles
 - Customizable font size and position for translated subtitles
 - Support for multiple languages
-- Uses LibreTranslate for translations
+- Uses the old Google Translate API for translations
 
 ## Installation
 
@@ -29,13 +29,7 @@ This Chrome extension adds real-time translation capabilities to Netflix subtitl
 
 ## Configuration
 
-The extension currently uses a local LibreTranslate server for translations. The server URL is hardcoded in the `translate.js` file:
-
-```javascript
-const apiUrl = 'http://localhost:5000/translate';  // LibreTranslate server URL
-```
-
-Make sure to set up and run a LibreTranslate server locally before using the extension.
+The extension now uses the old Google Translate API for translations. No additional setup is required.
 
 ## Upcoming Features
 
