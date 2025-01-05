@@ -3,3 +3,12 @@
   text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
   z-index: 9999;
 }
+
+/* ARD Mediathek specific styles */
+.ardmediathek-player #translated-subtitle {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  max-width: 80%;
+}

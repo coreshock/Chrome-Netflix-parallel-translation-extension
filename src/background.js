@@ -3,7 +3,10 @@ chrome.runtime.onInstalled.addListener(function() {
 });
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-  if (changeInfo.status === 'complete' && (tab.url.includes('netflix.com') || tab.url.includes('youtube.com'))) {
+  if (changeInfo.status === 'complete' && 
+      (tab.url.includes('netflix.com') || 
+       tab.url.includes('youtube.com') || 
+       tab.url.includes('ardmediathek.de'))) {
     console.log('Matching tab updated:', tab.url);
     chrome.tabs.sendMessage(tabId, {action: 'initializeTranslation'});
   }
