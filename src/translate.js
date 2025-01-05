@@ -1,38 +1,26 @@
+// translate.js
 async function translateText(text, sourceLang, targetLang) {
-  const apiUrl = 'http://localhost:5000/translate';  // LibreTranslate server URL
-
   try {
     console.log('Sending translation request...');
     
-    // Make a POST request to LibreTranslate server
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        q: text,           // The text to be translated
-        source: sourceLang, // Source language code
-        target: targetLang, // Target language code
-        format: 'text'      // Format of the text
-      })
-    });
+    // Use Google's free translation API
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&dt=bd&dj=1&q=${encodeURIComponent(text)}`;
     
-    console.log('Response status:', response.status);
+    const response = await fetch(url);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     const data = await response.json();
-    console.log('Translation response:', data);
     
-    // Check if translation exists and return it
-    if (data.translatedText) {
-      return data.translatedText;
-    } else {
-      throw new Error('No valid translation found');
-    }
+    // Extract the translated text from Google's response
+    const translatedText = data.sentences
+      .map(sentence => sentence.trans)
+      .join("");
+    
+    return translatedText;
+    
   } catch (error) {
     console.error('Translation error:', error);
     throw error;
