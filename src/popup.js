@@ -54,7 +54,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Reset to defaults
   resetDefaults.addEventListener('click', function() {
-    Object.assign(document.forms[0].elements, defaultSettings);
+    // Update form elements with default settings
+    enableTranslation.checked = defaultSettings.enabled;
+    sourceLang.value = defaultSettings.sourceLang;
+    targetLang.value = defaultSettings.targetLang;
+    fontSize.value = defaultSettings.fontSize;
+    fontSizeSlider.value = defaultSettings.fontSize;
+    verticalPosition.value = defaultSettings.verticalPosition;
+    verticalPositionSlider.value = defaultSettings.verticalPosition;
+    fontColor.value = defaultSettings.fontColor;
+
     saveSettings();
   });
 
