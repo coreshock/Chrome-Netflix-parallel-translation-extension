@@ -1,3 +1,4 @@
+// manifest.json
 {
   "manifest_version": 3,
   "name": "Subtitle Translator for Netflix subtitles using local Libretranslate server",
@@ -30,15 +31,12 @@
   "content_scripts": [
     {
       "matches": ["*://*.netflix.com/*", "*://*.ardmediathek.de/*", "*://*.youtube.com/*"],
-      "js": [
-        "utils.js",
-        "subtitle-detection.js",
-        "translate.js",
-        "ui-manipulation.js",
-        "content.js"
-      ],
-      "css": ["styles.css"],
-      "type": "module"
+      "js": ["content-script.js"],
+      "css": ["styles.css"]
     }
-  ]
+  ],
+  "web_accessible_resources": [{
+    "resources": ["utils.js", "subtitle-detection.js", "translate.js", "ui-manipulation.js"],
+    "matches": ["<all_urls>"]
+  }]
 }

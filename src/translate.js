@@ -1,5 +1,5 @@
 // translate.js
-async function translateText(text, sourceLang, targetLang) {
+const translateText = async (text, sourceLang, targetLang) => {
   console.log('translateText called with text:', text, 'sourceLang:', sourceLang, 'targetLang:', targetLang);
   try {
     console.log('Sending translation request...');
@@ -29,3 +29,5 @@ async function translateText(text, sourceLang, targetLang) {
     throw error;
   }
 }
+
+export { translateText };

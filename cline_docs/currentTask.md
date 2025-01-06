@@ -7,4 +7,7 @@ The extension was not working as expected after the latest update. The goal was 
 ## Next Steps
 - [x] Investigate and fix the "Uncaught SyntaxError: Cannot use import statement outside a module" error in `src/content.js`.
 - [x] Add debug console output to `src/content.js`, `src/subtitle-detection.js`, and `src/translate.js` to track subtitle detection, translation, and injection processes.
+- [x] Add export keywords to `src/subtitle-detection.js`, `src/translate.js`, and `src/ui-manipulation.js`
+- [x] Add .js extensions to import statements in `src/content.js`
+- [x] Update `manifest.json` to include `"type": "module"` for all relevant content scripts and remove duplicate file names.
 - [ ] Test the extension on Netflix and ARD to ensure subtitles are detected, translated, and displayed correctly.

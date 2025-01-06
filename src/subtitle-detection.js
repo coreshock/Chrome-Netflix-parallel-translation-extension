@@ -1,4 +1,4 @@
-function detectSubtitles() {
+const detectSubtitles = () => {
   console.log('detectSubtitles called');
 
   // Check if we're on ARD Mediathek
@@ -44,6 +44,7 @@ function detectSubtitles() {
       console.log('No ARD subtitles found.');
       return null;
     };
+  
 
     const ardSubtitles = findArdSubtitles();
     if (ardSubtitles) {
@@ -70,7 +71,8 @@ function detectSubtitles() {
   return null;
 }
 
-function extractArdSubtitles(container) {
+
+const extractArdSubtitles = (container) => {
   console.log("extractArdSubtitles function called, container:", container);
   let subtitles = [];
 
@@ -100,3 +102,5 @@ function extractArdSubtitles(container) {
   console.log("Subtitles found:", subtitles);
   return subtitles;
 }
+
+export { detectSubtitles, extractArdSubtitles };

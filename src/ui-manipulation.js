@@ -1,4 +1,4 @@
-function createTranslatedSubtitleElement() {
+const createTranslatedSubtitleElement = () => {
     const translatedSubtitleElement = document.createElement('div');
     translatedSubtitleElement.id = 'translated-subtitle';
     translatedSubtitleElement.style.position = 'fixed';
@@ -12,7 +12,7 @@ function createTranslatedSubtitleElement() {
     return translatedSubtitleElement;
   }
   
-  function updateSubtitleStyles(translatedSubtitleElement, settings) {
+  const updateSubtitleStyles = (translatedSubtitleElement, settings) => {
     if (translatedSubtitleElement) {
       translatedSubtitleElement.style.fontSize = `${settings.fontSize}px`;
       translatedSubtitleElement.style.bottom = `${settings.verticalPosition}px`;
@@ -21,8 +21,29 @@ function createTranslatedSubtitleElement() {
     }
   }
   
-  function clearTranslatedSubtitle(translatedSubtitleElement) {
+  const clearTranslatedSubtitle = (translatedSubtitleElement) => {
     if (translatedSubtitleElement) {
       translatedSubtitleElement.textContent = '';
     }
   }
+  
+  const sanitizeSubtitleText = (text) => {
+    return text.replace(/<[^>]*>/g, '').trim();
+  }
+
+  const debounce = (func, delay) => {
+    let timeout;
+    return function(...args) {
+      const context = this;
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(context, args), delay);
+    };
+  }
+
+  export {
+    createTranslatedSubtitleElement,
+    updateSubtitleStyles,
+    clearTranslatedSubtitle,
+    sanitizeSubtitleText,
+    debounce
+  };
