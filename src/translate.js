@@ -1,5 +1,6 @@
 // translate.js
 async function translateText(text, sourceLang, targetLang) {
+  console.log('translateText called with text:', text, 'sourceLang:', sourceLang, 'targetLang:', targetLang);
   try {
     console.log('Sending translation request...');
     
@@ -13,11 +14,13 @@ async function translateText(text, sourceLang, targetLang) {
     }
     
     const data = await response.json();
+    console.log('Translation API response:', data);
     
     // Extract the translated text from Google's response
     const translatedText = data.sentences
       .map(sentence => sentence.trans)
       .join("");
+    console.log('Translated text:', translatedText);
     
     return translatedText;
     

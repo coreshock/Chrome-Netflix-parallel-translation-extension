@@ -20,6 +20,7 @@ let ardSubtitleElement = null;
 let lastTranslatedArdSubtitles = [];
 
 const debouncedTranslateSubtitles = debounce(async () => {
+  console.log('debouncedTranslateSubtitles called');
   if (!settings.enabled) {
     console.log('Translation not performed. Enabled:', settings.enabled);
     clearTranslatedSubtitle(translatedSubtitleElement);
@@ -27,10 +28,13 @@ const debouncedTranslateSubtitles = debounce(async () => {
   }
 
   if (originalSubtitleElement) {
+    console.log('Original subtitle element found');
     const originalText = originalSubtitleElement.textContent.trim();
     const sanitizedText = sanitizeSubtitleText(originalText);
+    console.log('Original text:', originalText, 'Sanitized text:', sanitizedText);
 
     if (sanitizedText === '') {
+      console.log('Sanitized text is empty, clearing translated subtitle');
       clearTranslatedSubtitle(translatedSubtitleElement);
       lastSanitizedText = '';
       return;
@@ -44,6 +48,7 @@ const debouncedTranslateSubtitles = debounce(async () => {
     lastSanitizedText = sanitizedText;
 
     try {
+      console.log('Attempting translation:', sanitizedText);
       const translatedText = await translateText(sanitizedText, settings.sourceLang, settings.targetLang);
       console.log('Translated subtitle:', translatedText);
       if (translatedSubtitleElement) {
@@ -56,11 +61,15 @@ const debouncedTranslateSubtitles = debounce(async () => {
   }
 
   if (ardSubtitleElement) {
+    console.log('ARD subtitle element found');
     const ardSubtitles = extractArdSubtitles(ardSubtitleElement);
+    console.log('Extracted ARD subtitles:', ardSubtitles);
     const newSubtitles = ardSubtitles.filter(subtitle => !lastTranslatedArdSubtitles.some(lastSubtitle => lastSubtitle.text === subtitle.text));
+    console.log('New ARD subtitles:', newSubtitles);
 
     if (newSubtitles.length > 0) {
       try {
+        console.log('Attempting ARD subtitle translation:', newSubtitles);
         const translatedSubtitles = await Promise.all(newSubtitles.map(subtitle => translateText(subtitle.text, settings.sourceLang, settings.targetLang)));
         console.log('Translated ARD subtitles:', translatedSubtitles);
 
@@ -87,9 +96,12 @@ const debouncedTranslateSubtitles = debounce(async () => {
 function initializeTranslation() {
   console.log('Initializing translation');
   originalSubtitleElement = detectSubtitles();
+  console.log('Detected original subtitle element:', originalSubtitleElement);
   ardSubtitleElement = window.location.hostname.includes('ardmediathek.de') ? detectSubtitles() : null;
+  console.log('Detected ARD subtitle element:', ardSubtitleElement);
 
   if (originalSubtitleElement && !ardSubtitleElement) {
+    console.log('Initializing Netflix translation');
     translatedSubtitleElement = createTranslatedSubtitleElement();
     updateSubtitleStyles(translatedSubtitleElement, settings);
 
@@ -112,6 +124,7 @@ function initializeTranslation() {
 function initializeArdTranslation() {
   console.log('Initializing ARD translation');
   ardSubtitleElement = detectSubtitles();
+  console.log('Detected ARD subtitle element:', ardSubtitleElement);
 
   if (ardSubtitleElement) {
     const observer = new MutationObserver(() => {
@@ -126,6 +139,7 @@ function initializeArdTranslation() {
 }
 
 function displayArdSubtitles(subtitles) {
+  console.log('Displaying ARD subtitles:', subtitles);
   const container = ardSubtitleElement.parentElement;
   let displayContainer = document.getElementById('ard-subtitles-display');
 

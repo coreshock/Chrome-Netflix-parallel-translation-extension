@@ -1,10 +1,12 @@
 function detectSubtitles() {
-  console.log('Detecting subtitles...');
+  console.log('detectSubtitles called');
 
   // Check if we're on ARD Mediathek
   if (window.location.hostname.includes('ardmediathek.de')) {
+    console.log('ARD Mediathek detected');
     // Look for subtitle containers with specific styling patterns
     const findArdSubtitles = () => {
+      console.log('findArdSubtitles called');
       // Find elements that match ARD's subtitle styling pattern
       const allElements = document.querySelectorAll('p');
       for (const element of allElements) {
@@ -39,11 +41,15 @@ function detectSubtitles() {
         }
       }
      
+      console.log('No ARD subtitles found.');
       return null;
     };
 
     const ardSubtitles = findArdSubtitles();
-    if (ardSubtitles) return ardSubtitles;
+    if (ardSubtitles) {
+      console.log('ARD subtitles found:', ardSubtitles);
+      return ardSubtitles;
+    }
   }
 
   // Netflix subtitle detection
@@ -65,13 +71,15 @@ function detectSubtitles() {
 }
 
 function extractArdSubtitles(container) {
-  console.log("extractArdSubtitles function called");
+  console.log("extractArdSubtitles function called, container:", container);
   let subtitles = [];
 
   const subtitleParagraphs = container.querySelectorAll('p[style*="text-align: center;"]');
+  console.log("Subtitle paragraphs found:", subtitleParagraphs);
 
   subtitleParagraphs.forEach(p => {
     const spans = p.querySelectorAll('span[style^="margin:"]'); // Target spans with style starting with "margin:"
+    console.log("Spans found:", spans);
     spans.forEach(span => {
       const text = span.textContent.trim();
       const style = span.getAttribute('style');

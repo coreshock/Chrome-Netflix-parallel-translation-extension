@@ -10,6 +10,7 @@
   ],
   "host_permissions": [
     "*://*.netflix.com/*",
+    "*://*.ardmediathek.de/*",
     "*://*.youtube.com/*",
     "https://api.mymemory.translated.net/"
   ],
@@ -28,7 +29,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.netflix.com/*", "*://*.youtube.com/*"],
+      "matches": ["*://*.netflix.com/*", "*://*.ardmediathek.de/*", "*://*.youtube.com/*"],
       "js": [
         "utils.js",
         "subtitle-detection.js",
@@ -36,7 +37,8 @@
         "ui-manipulation.js",
         "content.js"
       ],
-      "css": ["styles.css"]
+      "css": ["styles.css"],
+      "type": "module"
     }
   ]
 }
