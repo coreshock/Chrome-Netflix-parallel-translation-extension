@@ -23,6 +23,7 @@
  - Implemented subtitle detection, translation and display functionality on Netflix
  - Created `code_examples` directory with subdirectories for each service (Netflix, ARD, YouTube, ZDF) and a general subdirectory for code examples.
  - Code examples in the `code_examples` directory should use a `_code` suffix in their filenames (e.g., `example_code.js`, `example_code.html`) to distinguish them from the main project's source files.
+ - Added ARD subtitle detection and translation functionality.
 
 ## User Feedback Integration and Its Impact on Development
 - The developer is happy with current implementation for Netflix and would like to extend supported services to ARD, Youtube and ZDF.

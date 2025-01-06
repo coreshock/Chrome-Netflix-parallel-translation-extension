@@ -1,6 +1,6 @@
 ## Project Goals
 - [ + ] Implement real-time translation of Netflix subtitles and injection of subtitles with parallel translation on Netflix page
-- [ ] Support additional video services, such as ARD
+- [+-] Support additional video services, such as ARD
 - [ +- ] Allow users to customize the appearance of translated subtitles individually for every service
 - [ +- ] Optimize performance for minimal impact on video playback
 
