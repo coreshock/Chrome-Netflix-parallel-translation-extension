@@ -1,106 +1,119 @@
 const detectSubtitles = () => {
   console.log('detectSubtitles called');
 
-  // Check if we're on ARD Mediathek
   if (window.location.hostname.includes('ardmediathek.de')) {
     console.log('ARD Mediathek detected');
-    // Look for subtitle containers with specific styling patterns
+    
+    // Enhanced ARD subtitle detection
     const findArdSubtitles = () => {
       console.log('findArdSubtitles called');
-      // Find elements that match ARD's subtitle styling pattern
-      const allElements = document.querySelectorAll('p');
-      for (const element of allElements) {
-        // Check if element matches ARD subtitle characteristics
-        if (
-          element.style.direction === 'ltr' &&
-          element.style.fontFamily?.includes('Verdana') &&
-          element.style.textAlign === 'center' &&
-          // Look for child spans that typically contain the actual subtitle text
-          element.querySelector('span[style*="background-color: rgba(0, 0, 0"]')
-        ) {
-          console.log('ARD Mediathek subtitles detected via styling:', element);
-          return element;
-        }
-      }
-     
-      // Backup methods if the above fails
-      const backupSelectors = [
-        '.ut-video-player__captions',
+      
+      // Try multiple methods to find ARD subtitles
+      const selectors = [
+        // Primary selectors for subtitle containers
         '.ardplayer-subtitle',
         '[aria-label="Untertitel"]',
-        // Add more specific selectors based on video player iframe content
+        '.video-player__captions',
+        // Backup selectors based on styling
         'div[style*="font-family: Verdana"][style*="text-align: center"]',
-        'p[style*="font-family: Verdana"][style*="text-align: center"]'
+        'div[style*="direction: ltr"][style*="text-align: center"]',
+        'p[style*="direction: ltr"][style*="text-align: center"]',
+        // Additional backup selectors
+        'div.player-subtitles',
+        '.ut-video-player__captions'
       ];
-     
-      for (const selector of backupSelectors) {
-        const element = document.querySelector(selector);
-        if (element) {
-          console.log('ARD Mediathek subtitles detected via selector:', selector, element);
+
+      for (const selector of selectors) {
+        const elements = document.querySelectorAll(selector);
+        for (const element of elements) {
+          // Verify it's a subtitle element by checking content or style
+          if (element.textContent.trim() && 
+              (element.style.position === 'absolute' || 
+               element.style.textAlign === 'center')) {
+            console.log('ARD subtitle element found:', element);
+            return element;
+          }
+        }
+      }
+
+      // If no element found through selectors, try finding by characteristics
+      const allElements = document.querySelectorAll('div, p');
+      for (const element of allElements) {
+        const style = window.getComputedStyle(element);
+        if (style.position === 'absolute' && 
+            style.textAlign === 'center' && 
+            element.textContent.trim() && 
+            (element.querySelector('span[style*="background-color"]') || 
+             style.backgroundColor.includes('rgba'))) {
+          console.log('ARD subtitle element found by characteristics:', element);
           return element;
         }
       }
-     
-      console.log('No ARD subtitles found.');
+      
+      console.log('No ARD subtitles found');
       return null;
     };
-  
 
-    const ardSubtitles = findArdSubtitles();
-    if (ardSubtitles) {
-      console.log('ARD subtitles found:', ardSubtitles);
-      return ardSubtitles;
-    }
+    return findArdSubtitles();
   }
 
-  // Netflix subtitle detection
+  // Netflix subtitle detection remains unchanged
   const netflixSubtitles = document.querySelector('.player-timedtext');
   if (netflixSubtitles) {
     console.log('Netflix subtitles detected:', netflixSubtitles);
     return netflixSubtitles;
   }
 
-  // Additional Netflix subtitle detection methods
   const alternateNetflixSubtitles = document.querySelector('.player-timedtext-text-container');
   if (alternateNetflixSubtitles) {
     console.log('Alternate Netflix subtitles detected:', alternateNetflixSubtitles);
     return alternateNetflixSubtitles;
   }
 
-  console.log('No subtitles detected.');
+  console.log('No subtitles detected');
   return null;
-}
-
+};
 
 const extractArdSubtitles = (container) => {
-  console.log("extractArdSubtitles function called, container:", container);
+  if (!container) return [];
+  console.log("Extracting ARD subtitles from container:", container);
+
   let subtitles = [];
+  try {
+    // Look for subtitle text in various container types
+    const textElements = [
+      ...container.querySelectorAll('span[style*="background-color"]'),
+      ...container.querySelectorAll('p[style*="text-align: center"]'),
+      ...container.querySelectorAll('div[style*="text-align: center"]')
+    ];
 
-  const subtitleParagraphs = container.querySelectorAll('p[style*="text-align: center;"]');
-  console.log("Subtitle paragraphs found:", subtitleParagraphs);
-
-  subtitleParagraphs.forEach(p => {
-    const spans = p.querySelectorAll('span[style^="margin:"]'); // Target spans with style starting with "margin:"
-    console.log("Spans found:", spans);
-    spans.forEach(span => {
-      const text = span.textContent.trim();
-      const style = span.getAttribute('style');
-      console.log("Style Attribute (Targeted):", style);
-
-      let color = null;
-      const colorMatch = style && style.match(/color: (.*?);/);
-      console.log("Color Match (Targeted):", colorMatch);
-
-      if (colorMatch) {
-        color = colorMatch[1];
+    textElements.forEach(element => {
+      const text = element.textContent.trim();
+      if (text) {
+        // Avoid duplicate subtitles
+        if (!subtitles.some(sub => sub.text === text)) {
+          subtitles.push({
+            text: text,
+            element: element
+          });
+        }
       }
-
-      subtitles.push({ text: text, color: color });
     });
-  });
 
-  console.log("Subtitles found:", subtitles);
+    // If no subtitles found through specific elements, try direct container text
+    if (subtitles.length === 0 && container.textContent.trim()) {
+      subtitles.push({
+        text: container.textContent.trim(),
+        element: container
+      });
+    }
+
+  } catch (error) {
+    console.error('Error extracting ARD subtitles:', error);
+  }
+
+  console.log("Extracted subtitles:", subtitles);
   return subtitles;
-}
+};
 
 export { detectSubtitles, extractArdSubtitles };

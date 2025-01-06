@@ -1,4 +1,3 @@
-// manifest.json
 {
   "manifest_version": 3,
   "name": "Subtitle Translator for Netflix subtitles using local Libretranslate server",

@@ -129,22 +129,64 @@ function initializeTranslation() {
   }
 }
 
-function initializeArdTranslation() {
-  console.log('Initializing ARD translation');
-  ardSubtitleElement = detectSubtitles();
-  console.log('Detected ARD subtitle element:', ardSubtitleElement);
-
-  if (ardSubtitleElement) {
-    const observer = new MutationObserver(() => {
-      debouncedTranslateSubtitles();
-    });
-    observer.observe(ardSubtitleElement, { childList: true, subtree: true, characterData: true });
-    console.log('MutationObserver set up for ARD subtitles:', ardSubtitleElement);
-  } else {
-    console.log('ARD subtitles not found. Retrying in 1 second...');
-    setTimeout(initializeArdTranslation, 1000);
+const initializeArdTranslation = () => {
+    console.log('Initializing ARD translation');
+    const subtitleElement = detectSubtitles();
+    console.log('Detected ARD subtitle element:', subtitleElement);
+  
+    if (subtitleElement) {
+      // Create container for translated subtitles if it doesn't exist
+      let translatedContainer = document.getElementById('ard-translated-subtitles');
+      if (!translatedContainer) {
+        translatedContainer = document.createElement('div');
+        translatedContainer.id = 'ard-translated-subtitles';
+        translatedContainer.style.position = 'absolute';
+        translatedContainer.style.left = '50%';
+        translatedContainer.style.transform = 'translateX(-50%)';
+        translatedContainer.style.bottom = '10%';
+        translatedContainer.style.textAlign = 'center';
+        translatedContainer.style.zIndex = '9999';
+        translatedContainer.style.color = settings.fontColor;
+        translatedContainer.style.fontSize = `${settings.fontSize}px`;
+        document.body.appendChild(translatedContainer);
+      }
+  
+      // Set up mutation observer for subtitle changes
+      const observer = new MutationObserver(async (mutations) => {
+        if (!settings.enabled) return;
+        
+        const subtitles = extractArdSubtitles(subtitleElement);
+        if (subtitles.length > 0) {
+          try {
+            const translatedTexts = await Promise.all(
+              subtitles.map(sub => translateText(sub.text, settings.sourceLang, settings.targetLang))
+            );
+            
+            translatedContainer.innerHTML = translatedTexts
+              .map(text => `<div style="margin: 5px 0;">${text}</div>`)
+              .join('');
+          } catch (error) {
+            console.error('Translation failed:', error);
+          }
+        } else {
+          translatedContainer.innerHTML = '';
+        }
+      });
+  
+      observer.observe(subtitleElement, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true
+      });
+  
+      // Store observer reference for cleanup
+      window.ardSubtitleObserver = observer;
+    } else {
+      console.log('ARD subtitles not found. Retrying in 1 second...');
+      setTimeout(initializeArdTranslation, 1000);
+    }
   }
-}
 
 function displayArdSubtitles(subtitles) {
   console.log('Displaying ARD subtitles:', subtitles);
