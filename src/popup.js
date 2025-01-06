@@ -17,23 +17,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (results && results[0] && results[0].result) {
           const subtitles = results[0].result;
-          if (subtitles.length > 0) {
-            statusElement.textContent = 'Subtitles found:';
-            subtitlesContainer.innerHTML = ''; // Clear previous subtitles
-            subtitles.forEach(subtitle => {
-              const subtitleDiv = document.createElement('div');
-              subtitleDiv.classList.add('subtitle-line');
-              subtitleDiv.textContent = subtitle.text;
-              if (subtitle.color) {
-                subtitleDiv.style.color = subtitle.color;
-              }
-              subtitlesContainer.appendChild(subtitleDiv);
-            });
-          } else {
-            statusElement.textContent = 'No subtitles found on this page.';
-          }
+          statusElement.textContent = `Subtitles found: ${subtitles.length}`;
+          subtitlesContainer.innerHTML = ''; // Clear previous subtitles
+
+          subtitles.forEach(subtitle => {
+            const subtitleDiv = document.createElement('div');
+            subtitleDiv.classList.add('subtitle-line');
+            subtitleDiv.textContent = subtitle.text;
+            if (subtitle.color) {
+              subtitleDiv.style.color = subtitle.color;
+            }
+            subtitlesContainer.appendChild(subtitleDiv);
+          });
         } else {
-          statusElement.textContent = 'Could not retrieve subtitles.';
+          statusElement.textContent = 'No subtitles found on this page.';
         }
       });
     } else {
@@ -50,11 +47,19 @@ function getSubtitles() {
     const subtitleParagraphs = document.querySelectorAll('p[style*="text-align: center;"]');
 
     subtitleParagraphs.forEach(p => {
-      const spans = p.querySelectorAll('span[style*="background-color: rgba"]');
+      const spans = p.querySelectorAll('span[style^="margin:"]'); // Target spans with style starting with "margin:"
       spans.forEach(span => {
         const text = span.textContent.trim();
-        const colorMatch = span.getAttribute('style').match(/color: (.*?);/);
-        const color = colorMatch ? colorMatch[1] : null;
+        const style = span.getAttribute('style');
+        console.log("Style Attribute (Targeted):", style);
+
+        let color = null;
+        const colorMatch = style && style.match(/color: (.*?);/);
+        console.log("Color Match (Targeted):", colorMatch);
+
+        if (colorMatch) {
+          color = colorMatch[1];
+        }
 
         subtitles.push({ text: text, color: color });
       });
