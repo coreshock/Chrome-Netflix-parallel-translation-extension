@@ -70,8 +70,6 @@ export class SubtitleObserver {
         const text = this.currentSubtitleElement.innerText || this.currentSubtitleElement.textContent || '';
         // Basic sanitization
         const cleanText = text.replace(/[\n\r]+/g, ' ').trim();
-        if (cleanText) {
-            this.callback(cleanText, this.currentSubtitleElement);
-        }
+        this.callback(cleanText, this.currentSubtitleElement);
     }
 }
