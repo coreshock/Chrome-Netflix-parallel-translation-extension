@@ -14,18 +14,17 @@ let host = document.getElementById(HOST_ID);
 if (!host) {
     host = document.createElement('div');
     host.id = HOST_ID;
-    host.style.position = 'absolute';
+    host.style.position = 'fixed'; // Fixed ensures overlay stays on screen
     host.style.top = '0';
     host.style.left = '0';
-    host.style.width = '100%';
-    host.style.height = '100%';
-    host.style.pointerEvents = 'none'; // Let clicks pass through to Netflix player
-    host.style.zIndex = '99999';
+    host.style.width = '100vw'; // Viewport units
+    host.style.height = '100vh';
+    host.style.pointerEvents = 'none';
+    host.style.zIndex = '2147483647'; // Max Z-Index
 
-    // Try to append to the Netflix full-screen player container if possible, otherwise body
-    const netflixPlayer = document.querySelector('.nfp-planning-layer') || document.body;
-    netflixPlayer.appendChild(host);
-    console.log('Shadow host appended to:', netflixPlayer);
+    // Initial append (will be moved by init logic if needed)
+    document.body.appendChild(host);
+    console.log('Shadow host initially appended to body');
 }
 
 // Create Shadow DOM
@@ -215,7 +214,10 @@ const App = () => {
                     maxWidth: '80%',
                     zIndex: 2147483640,
                     opacity: isVisible ? 1 : 0,
-                    transition: 'opacity 0.2s'
+                    transition: 'opacity 0.2s',
+                    // Center the box horizontally around the drag coordinate (x,y)
+                    // If x=ScreenCenter, this centers the box exactly in the middle.
+                    transform: 'translateX(-50%)'
                 }}>
                     <div style={{
                         color: settings.color,
@@ -268,10 +270,54 @@ const App = () => {
 };
 
 // Render logic
-const rootDiv = document.createElement('div');
-rootDiv.id = 'react-root';
-shadowRoot.appendChild(rootDiv);
+const init = () => {
+    console.log('Netflix Parallel Translation: Init started');
 
-const root = createRoot(rootDiv);
-root.render(<App />);
-console.log('React app rendered in Shadow DOM');
+    // Robustly find the Netflix player container or fallback to body
+    const findPlayer = () => {
+        const p1 = document.querySelector('.watch-video--player-view');
+        const p2 = document.querySelector('.nfp-planning-layer');
+        const p3 = document.querySelector('.sizing-wrapper');
+
+        if (p1) console.log('Found .watch-video--player-view');
+        if (p2) console.log('Found .nfp-planning-layer');
+        if (p3) console.log('Found .sizing-wrapper');
+
+        return p1 || p2 || p3 || document.body;
+    };
+
+    const attemptMount = () => {
+        const player = findPlayer();
+        if (player) {
+            // Ensure host is attached to the found container
+            if (host.parentElement !== player) {
+                player.appendChild(host);
+                console.log('Netflix Parallel Translation: Host mounted to', player === document.body ? 'BODY (Fallback)' : 'PLAYER CONTAINER');
+            }
+
+            // Render React if not already rendered
+            if (!shadowRoot.getElementById('react-root-mount')) {
+                const rootDiv = document.createElement('div');
+                rootDiv.id = 'react-root-mount';
+                shadowRoot.appendChild(rootDiv);
+
+                const root = createRoot(rootDiv);
+                root.render(<App />);
+                console.log('React App Rendered');
+            }
+        } else {
+            console.log('No container found (retry in 1s)');
+            setTimeout(attemptMount, 1000);
+        }
+    };
+
+    // Keep trying to keep it mounted (SPA navigation fix)
+    setInterval(attemptMount, 2000);
+    attemptMount();
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
