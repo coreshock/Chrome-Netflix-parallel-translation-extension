@@ -40,6 +40,52 @@ styleLink.rel = 'stylesheet';
 styleLink.href = chrome.runtime.getURL('assets/content.css');
 shadowRoot.appendChild(styleLink);
 
+// Helper to split text into words and separators
+const tokenize = (text: string) => {
+    // Split by non-word characters but keep delimiters
+    // Using a simple regex for now that captures whitespace/punctuation as separate tokens
+    return text.split(/([^\p{L}\p{N}]+)/u).filter(t => t);
+};
+
+const Tooltip = ({ text, x, y, visible }: { text: string, x: number, y: number, visible: boolean }) => {
+    if (!visible || !text) return null;
+    return (
+        <div style={{
+            position: 'fixed',
+            left: x,
+            top: y,
+            transform: 'translate(-50%, -100%) translateY(-8px)',
+            backgroundColor: '#1f2937', // slate-800
+            color: '#f3f4f6',
+            padding: '6px 12px',
+            borderRadius: '6px',
+            fontSize: '14px',
+            pointerEvents: 'none',
+            zIndex: 2147483647,
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
+            border: '1px solid #374151',
+            whiteSpace: 'nowrap',
+            maxWidth: '200px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+        }}>
+            {text}
+            {/* Tiny arrow */}
+            <div style={{
+                position: 'absolute',
+                bottom: '-4px',
+                left: '50%',
+                transform: 'translateX(-50%) rotate(45deg)',
+                width: '8px',
+                height: '8px',
+                backgroundColor: '#1f2937',
+                borderRight: '1px solid #374151',
+                borderBottom: '1px solid #374151'
+            }} />
+        </div>
+    );
+};
+
 const App = () => {
     const [original, setOriginal] = useState<string>('');
     const [translated, setTranslated] = useState<string>('');
@@ -50,17 +96,19 @@ const App = () => {
         color: '#ffff00'
     });
 
-    // Refs for safe access inside callbacks
+    // Hover State
+    const [hoveredWord, setHoveredWord] = useState<string | null>(null);
+    const [tooltipText, setTooltipText] = useState<string>('');
+    const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+    const hoverTimeoutRef = useRef<any>(null);
+
+    // Refs for safe access
     const settingsRef = useRef(settings);
     const nodeRef = useRef(null);
 
-    // Keep ref in sync with state
-    useEffect(() => {
-        settingsRef.current = settings;
-    }, [settings]);
+    useEffect(() => { settingsRef.current = settings; }, [settings]);
 
     useEffect(() => {
-        // Load settings initially
         chrome.storage.local.get(['targetLang', 'enabled', 'fontSize', 'color'], (result) => {
             setSettings(prev => ({
                 ...prev,
@@ -71,29 +119,19 @@ const App = () => {
             }));
         });
 
-        // Listen for setting changes
-        const messageListener = (request: any, sender: any, sendResponse: any) => {
+        const messageListener = (request: any) => {
             if (request.action === 'updateSettings') {
-                console.log('Settings updated:', request.payload);
                 setSettings(prev => {
                     const next = { ...prev, ...request.payload };
-                    // Clear translation if disabled
                     if (request.payload.enabled === false) setTranslated('');
                     return next;
                 });
-
-                // Trigger re-translation if we have text and just enabled/changed language
-                // access new values from payload + prev state logic is tricky in async
-                // Simple approach: if enabled is true in payload or (current true and not changing), rely on effect or just let next mutation handle it.
-                // Actually, the easiest way is to re-run translation if language changed.
             }
         };
         chrome.runtime.onMessage.addListener(messageListener);
 
         const observer = new SubtitleObserver(async (text) => {
             setOriginal(text);
-
-            // Access latest settings via Ref
             const current = settingsRef.current;
 
             if (!text || !text.trim() || !current.enabled) {
@@ -104,14 +142,10 @@ const App = () => {
             try {
                 const trans = await translateText(text, 'auto', current.targetLang);
                 if (settingsRef.current.enabled) setTranslated(trans);
-            } catch (err) {
+            } catch (err: any) {
                 if (settingsRef.current.enabled) {
-                    const errMsg = (err instanceof Error ? err.message : String(err));
-                    if (errMsg.includes('Extension context invalidated') || errMsg.includes('reload')) {
-                        setTranslated('⚠️ Update Installed. Please Reload Page.');
-                    } else {
-                        setTranslated('Err: ' + errMsg);
-                    }
+                    const errMsg = err.message || String(err);
+                    setTranslated(errMsg.includes('context invalidated') ? '⚠️ Please Reload' : 'Err: ' + errMsg);
                 }
             }
         });
@@ -121,10 +155,8 @@ const App = () => {
             observer.stop();
             chrome.runtime.onMessage.removeListener(messageListener);
         };
-    }, []); // Hook only runs once, internal logic relies on refs/setters
+    }, []);
 
-    // Re-trigger translation when settings that affect output logic change (Language)
-    // We can't easily re-run the observer's callback, but we can manually triggering translation if we have 'original'.
     useEffect(() => {
         if (original && settings.enabled) {
             translateText(original, 'auto', settings.targetLang)
@@ -133,8 +165,42 @@ const App = () => {
         }
     }, [settings.targetLang, settings.enabled]);
 
+    // Handle Word Hover
+    const handleWordEnter = (word: string, e: React.MouseEvent) => {
+        const rect = (e.target as HTMLElement).getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const topY = rect.top;
+
+        setTooltipPos({ x: centerX, y: topY });
+        setHoveredWord(word);
+        setTooltipText('...'); // Loading state
+
+        // Clear previous pending translation
+        if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+
+        // Debounce slightly to avoid spam
+        hoverTimeoutRef.current = setTimeout(async () => {
+            try {
+                // Logic: Translate FROM current targetLang TO 'en' (or 'ru' if target is 'en')
+                const fromLang = settings.targetLang;
+                const toLang = fromLang === 'ru' ? 'en' : 'ru'; // Simple toggle for now
+
+                const translation = await translateText(word, fromLang, toLang);
+                setTooltipText(translation);
+            } catch (err) {
+                setTooltipText('?');
+            }
+        }, 300);
+    };
+
+    const handleWordLeave = () => {
+        if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+        setHoveredWord(null);
+        setTooltipText('');
+    };
 
     const isVisible = (original && settings.enabled && translated);
+    const tokens = isVisible ? tokenize(translated) : [];
 
     return (
         <div style={{ pointerEvents: 'none', width: '100vw', height: '100vh', position: 'fixed', top: 0, left: 0 }}>
@@ -146,11 +212,10 @@ const App = () => {
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    width: 'fit-content',
                     maxWidth: '80%',
-                    zIndex: 2147483647,
+                    zIndex: 2147483640,
                     opacity: isVisible ? 1 : 0,
-                    transition: 'opacity 0.2s ease-in-out'
+                    transition: 'opacity 0.2s'
                 }}>
                     <div style={{
                         color: settings.color,
@@ -165,12 +230,39 @@ const App = () => {
                         textShadow: '2px 2px 4px rgba(0,0,0,0.9)',
                         fontFamily: '"Netflix Sans", "Helvetica Neue", Helvetica, Arial, sans-serif',
                         userSelect: 'text',
-                        whiteSpace: 'pre-wrap'
+                        whiteSpace: 'pre-wrap',
+                        lineHeight: '1.4'
                     }}>
-                        {translated}
+                        {tokens.map((token, i) => {
+                            // Only make "words" interactive (letters/numbers)
+                            const isWord = /^[\p{L}\p{N}]+$/u.test(token);
+                            if (!isWord) return <span key={i}>{token}</span>;
+
+                            return (
+                                <span
+                                    key={i}
+                                    onMouseEnter={(e) => handleWordEnter(token, e)}
+                                    onMouseLeave={handleWordLeave}
+                                    style={{
+                                        cursor: 'help',
+                                        borderBottom: hoveredWord === token ? '2px solid rgba(255,255,255,0.5)' : 'none',
+                                        transition: 'border-bottom 0.2s'
+                                    }}
+                                >
+                                    {token}
+                                </span>
+                            );
+                        })}
                     </div>
                 </div>
             </Draggable>
+
+            <Tooltip
+                text={tooltipText}
+                x={tooltipPos.x}
+                y={tooltipPos.y}
+                visible={!!hoveredWord}
+            />
         </div>
     );
 };
