@@ -2,7 +2,7 @@
 
 A powerful Chrome Extension that adds a secondary, parallel subtitle track to Netflix. Perfect for language learners who want to see their native language and the target language simultaneously.
 
-![Screenshot: Dual Subtitles in Action](https://raw.githubusercontent.com/antigravity-agent/assets/main/netflix-parallel-subs-demo.png)
+![Screenshot: Dual Subtitles in Action](assets/netflix2.jpg)
 *(See 'Screenshots' section below for more previews)*
 
 ## 🌟 Key Features
