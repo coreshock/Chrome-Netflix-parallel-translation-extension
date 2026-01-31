@@ -17,10 +17,11 @@ if (!host) {
     host.style.position = 'fixed'; // Fixed ensures overlay stays on screen
     host.style.top = '0';
     host.style.left = '0';
-    host.style.width = '100vw'; // Viewport units
-    host.style.height = '100vh';
+    host.style.width = '100%'; // Full width for centering context
+    host.style.height = '100%';
+    host.style.overflow = 'hidden';
     host.style.pointerEvents = 'none';
-    host.style.zIndex = '2147483647'; // Max Z-Index
+    host.style.zIndex = '9999'; // Lower Z-index
 
     // Initial append (will be moved by init logic if needed)
     document.body.appendChild(host);
@@ -90,6 +91,7 @@ const App = () => {
     const [translated, setTranslated] = useState<string>('');
     const [settings, setSettings] = useState({
         targetLang: 'ru',
+        hoverTargetLang: 'auto', // Default to Smart Mode
         enabled: true,
         fontSize: 28,
         color: '#ffff00'
@@ -108,10 +110,11 @@ const App = () => {
     useEffect(() => { settingsRef.current = settings; }, [settings]);
 
     useEffect(() => {
-        chrome.storage.local.get(['targetLang', 'enabled', 'fontSize', 'color'], (result) => {
+        chrome.storage.local.get(['targetLang', 'hoverTargetLang', 'enabled', 'fontSize', 'color'], (result) => {
             setSettings(prev => ({
                 ...prev,
                 targetLang: result.targetLang || prev.targetLang,
+                hoverTargetLang: result.hoverTargetLang || prev.hoverTargetLang,
                 enabled: result.enabled !== undefined ? result.enabled : prev.enabled,
                 fontSize: result.fontSize || prev.fontSize,
                 color: result.color || prev.color
@@ -180,11 +183,16 @@ const App = () => {
         // Debounce slightly to avoid spam
         hoverTimeoutRef.current = setTimeout(async () => {
             try {
-                // Logic: Translate FROM current targetLang TO 'en' (or 'ru' if target is 'en')
-                const fromLang = settings.targetLang;
-                const toLang = fromLang === 'ru' ? 'en' : 'ru'; // Simple toggle for now
+                // Logic: Determine target language
+                let toLang = settings.hoverTargetLang;
 
-                const translation = await translateText(word, fromLang, toLang);
+                // If set to 'auto', keep the smart flip logic (Source <-> Target)
+                if (!toLang || toLang === 'auto') {
+                    const fromLang = settings.targetLang;
+                    toLang = fromLang === 'ru' ? 'en' : 'ru'; // Simple toggle for now (Improve later if needed)
+                }
+
+                const translation = await translateText(word, 'auto', toLang);
                 setTooltipText(translation);
             } catch (err) {
                 setTooltipText('?');
@@ -202,8 +210,18 @@ const App = () => {
     const tokens = isVisible ? tokenize(translated) : [];
 
     return (
-        <div style={{ pointerEvents: 'none', width: '100vw', height: '100vh', position: 'fixed', top: 0, left: 0 }}>
-            <Draggable nodeRef={nodeRef} bounds="parent" defaultPosition={{ x: window.innerWidth / 2 - 200, y: window.innerHeight - 150 }}>
+        <div style={{
+            pointerEvents: 'none',
+            width: '100%',
+            height: '100%',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            background: 'transparent',
+            zIndex: 9999
+        }}>
+            {/* Start at (0,0) relative to the centered, bottom-aligned CSS position */}
+            <Draggable nodeRef={nodeRef} bounds="parent" defaultPosition={{ x: 0, y: 0 }}>
                 <div ref={nodeRef} style={{
                     position: 'absolute',
                     cursor: 'move',
@@ -212,28 +230,31 @@ const App = () => {
                     flexDirection: 'column',
                     alignItems: 'center',
                     maxWidth: '80%',
-                    zIndex: 2147483640,
+                    zIndex: 10000,
                     opacity: isVisible ? 1 : 0,
                     transition: 'opacity 0.2s',
-                    // Center the box horizontally around the drag coordinate (x,y)
-                    // If x=ScreenCenter, this centers the box exactly in the middle.
-                    transform: 'translateX(-50%)'
+                    // CSS-based initial placement: Centered, 20% from bottom
+                    left: 0,
+                    right: 0,
+                    margin: '0 auto',
+                    bottom: '20%',
+                    width: 'fit-content'
                 }}>
                     <div style={{
                         color: settings.color,
                         fontSize: `${settings.fontSize}px`,
                         fontWeight: '700',
                         textAlign: 'center',
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        padding: '12px 24px',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.5)',
-                        backdropFilter: 'blur(4px)',
-                        textShadow: '2px 2px 4px rgba(0,0,0,0.9)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)', // Slightly darker since no blur
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                        // REMOVED backdropFilter to fix DRM Black Screen
+                        textShadow: '1px 1px 2px rgba(0,0,0,0.9)',
                         fontFamily: '"Netflix Sans", "Helvetica Neue", Helvetica, Arial, sans-serif',
                         userSelect: 'text',
                         whiteSpace: 'pre-wrap',
-                        lineHeight: '1.4'
+                        lineHeight: '1.2'
                     }}>
                         {tokens.map((token, i) => {
                             // Only make "words" interactive (letters/numbers)
@@ -288,31 +309,28 @@ const init = () => {
 
     const attemptMount = () => {
         const player = findPlayer();
-        if (player) {
-            // Ensure host is attached to the found container
-            if (host.parentElement !== player) {
-                player.appendChild(host);
-                console.log('Netflix Parallel Translation: Host mounted to', player === document.body ? 'BODY (Fallback)' : 'PLAYER CONTAINER');
-            }
+        // If we found a player container, use it. Otherwise, stay on body as fallback.
+        const target = player || document.body;
 
-            // Render React if not already rendered
-            if (!shadowRoot.getElementById('react-root-mount')) {
-                const rootDiv = document.createElement('div');
-                rootDiv.id = 'react-root-mount';
-                shadowRoot.appendChild(rootDiv);
+        if (host.parentElement !== target) {
+            target.appendChild(host);
+            console.log('Netflix Parallel Translation: Host MOVED to', target === document.body ? 'BODY' : 'PLAYER');
+        }
 
-                const root = createRoot(rootDiv);
-                root.render(<App />);
-                console.log('React App Rendered');
-            }
-        } else {
-            console.log('No container found (retry in 1s)');
-            setTimeout(attemptMount, 1000);
+        // Render React if not already rendered
+        if (!shadowRoot.getElementById('react-root-mount')) {
+            const rootDiv = document.createElement('div');
+            rootDiv.id = 'react-root-mount';
+            shadowRoot.appendChild(rootDiv);
+
+            const root = createRoot(rootDiv);
+            root.render(<App />);
+            console.log('React App Rendered');
         }
     };
 
-    // Keep trying to keep it mounted (SPA navigation fix)
-    setInterval(attemptMount, 2000);
+    // Check frequently to handle fullscreen toggles (which might wipe the DOM)
+    setInterval(attemptMount, 500);
     attemptMount();
 };
 
