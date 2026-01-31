@@ -2,7 +2,8 @@
 
 A powerful Chrome Extension that adds a secondary, parallel subtitle track to Netflix. Perfect for language learners who want to see their native language and the target language simultaneously.
 
-![Screenshot of Extension in Action](https://raw.githubusercontent.com/antigravity-agent/assets/main/netflix-parallel-subs-demo.png) *(Placeholder image)*
+![Screenshot: Dual Subtitles in Action](https://raw.githubusercontent.com/antigravity-agent/assets/main/netflix-parallel-subs-demo.png)
+*(See 'Screenshots' section below for more previews)*
 
 ## 🌟 Key Features
 
@@ -20,7 +21,19 @@ A powerful Chrome Extension that adds a secondary, parallel subtitle track to Ne
 
 ## 🚀 Installation
 
-### For Developers / Manual Installation
+### Option 1: Easy Install (Pre-compiled)
+
+1.  **Download the Release**:
+    *   Download `netflix-parallel-translation-v1.3.2.zip` from the releases page (or the root of this repo).
+    *   **Unzip** the file to a folder (e.g., `Documents/NetflixExtension`).
+
+2.  **Load into Chrome**:
+    *   Open Google Chrome and navigate to `chrome://extensions/`.
+    *   Enable **"Developer mode"** (top right switch).
+    *   Click **"Load unpacked"**.
+    *   Select the **unzipped folder** (the one containing `manifest.json`).
+
+### Option 2: Developers / Manual Build
 
 1.  **Clone the Repository**:
     ```bash
@@ -42,10 +55,15 @@ A powerful Chrome Extension that adds a secondary, parallel subtitle track to Ne
     *This will compile the TypeScript code and generate the `dist` folder.*
 
 4.  **Load into Chrome**:
-    *   Open Google Chrome and navigate to `chrome://extensions/`.
-    *   Enable **"Developer mode"** (top right switch).
-    *   Click **"Load unpacked"**.
-    *   Select the `dist` folder from this project directory.
+    *   Follow the same "Load unpacked" steps as above, selecting the `dist` folder.
+
+## 📸 Screenshots
+
+| Feature | Preview |
+| :--- | :--- |
+| **Main Interface** | *[Place screenshot of Netflix playing with dual subtitles here]* |
+| **Settings Popup** | *[Place screenshot of the extension popup menu here]* |
+| **Hover Tooltip** | *[Place screenshot of hovering over a word to see translation]* |
 
 ## 📖 User Manual
 
