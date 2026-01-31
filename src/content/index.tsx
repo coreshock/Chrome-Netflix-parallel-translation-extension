@@ -91,10 +91,12 @@ const App = () => {
     const [translated, setTranslated] = useState<string>('');
     const [settings, setSettings] = useState({
         targetLang: 'ru',
-        hoverTargetLang: 'auto', // Default to Smart Mode
+        hoverTargetLang: 'auto',
         enabled: true,
         fontSize: 28,
-        color: '#ffff00'
+        color: '#ffff00',
+        windowPos: { x: 0, y: 0 },
+        fullscreenPos: { x: 0, y: 0 }
     });
 
     // Hover State
@@ -103,6 +105,9 @@ const App = () => {
     const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
     const hoverTimeoutRef = useRef<any>(null);
 
+    // Fullscreen State
+    const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
+
     // Refs for safe access
     const settingsRef = useRef(settings);
     const nodeRef = useRef(null);
@@ -110,14 +115,21 @@ const App = () => {
     useEffect(() => { settingsRef.current = settings; }, [settings]);
 
     useEffect(() => {
-        chrome.storage.local.get(['targetLang', 'hoverTargetLang', 'enabled', 'fontSize', 'color'], (result) => {
+        // Handle Fullscreen Changes
+        const handleFs = () => setIsFullscreen(!!document.fullscreenElement);
+        document.addEventListener('fullscreenchange', handleFs);
+
+        // Load Settings
+        chrome.storage.local.get(['targetLang', 'hoverTargetLang', 'enabled', 'fontSize', 'color', 'windowPos', 'fullscreenPos'], (result) => {
             setSettings(prev => ({
                 ...prev,
                 targetLang: result.targetLang || prev.targetLang,
                 hoverTargetLang: result.hoverTargetLang || prev.hoverTargetLang,
                 enabled: result.enabled !== undefined ? result.enabled : prev.enabled,
                 fontSize: result.fontSize || prev.fontSize,
-                color: result.color || prev.color
+                color: result.color || prev.color,
+                windowPos: result.windowPos || prev.windowPos,
+                fullscreenPos: result.fullscreenPos || prev.fullscreenPos
             }));
         });
 
@@ -130,8 +142,35 @@ const App = () => {
                 });
             }
         };
-        chrome.runtime.onMessage.addListener(messageListener);
 
+        chrome.runtime.onMessage.addListener(messageListener);
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFs);
+            chrome.runtime.onMessage.removeListener(messageListener);
+        };
+    }, []);
+
+
+    const observer = new SubtitleObserver(async (text) => {
+        setOriginal(text);
+        const current = settingsRef.current;
+
+        if (!text || !text.trim() || !current.enabled) {
+            setTranslated('');
+            return;
+        }
+
+        try {
+            const trans = await translateText(text, 'auto', current.targetLang);
+            if (settingsRef.current.enabled) setTranslated(trans);
+        } catch (err: any) {
+            if (settingsRef.current.enabled) {
+                const errMsg = err.message || String(err);
+                setTranslated(errMsg.includes('context invalidated') ? '⚠️ Please Reload' : 'Err: ' + errMsg);
+            }
+        }
+    });
+    useEffect(() => {
         const observer = new SubtitleObserver(async (text) => {
             setOriginal(text);
             const current = settingsRef.current;
@@ -155,7 +194,6 @@ const App = () => {
 
         return () => {
             observer.stop();
-            chrome.runtime.onMessage.removeListener(messageListener);
         };
     }, []);
 
@@ -165,7 +203,7 @@ const App = () => {
                 .then(t => { if (settings.enabled) setTranslated(t); })
                 .catch(e => console.error(e));
         }
-    }, [settings.targetLang, settings.enabled]);
+    }, [original, settings.targetLang, settings.enabled]);
 
     // Handle Word Hover
     const handleWordEnter = (word: string, e: React.MouseEvent) => {
@@ -209,6 +247,14 @@ const App = () => {
     const isVisible = (original && settings.enabled && translated);
     const tokens = isVisible ? tokenize(translated) : [];
 
+    const handleDragStop = (_e: any, data: any) => {
+        const newPos = { x: data.x, y: data.y };
+        const key = isFullscreen ? 'fullscreenPos' : 'windowPos';
+
+        setSettings(prev => ({ ...prev, [key]: newPos }));
+        chrome.storage.local.set({ [key]: newPos });
+    };
+
     return (
         <div style={{
             pointerEvents: 'none',
@@ -221,7 +267,14 @@ const App = () => {
             zIndex: 9999
         }}>
             {/* Start at (0,0) relative to the centered, bottom-aligned CSS position */}
-            <Draggable nodeRef={nodeRef} bounds="parent" defaultPosition={{ x: 0, y: 0 }}>
+            {/* Key forces component reset on mode switch OR when position loads from storage */}
+            <Draggable
+                key={`${isFullscreen ? 'fs' : 'win'}-${settings.windowPos.x}-${settings.fullscreenPos.x}`}
+                nodeRef={nodeRef}
+                bounds="parent"
+                defaultPosition={isFullscreen ? settings.fullscreenPos : settings.windowPos}
+                onStop={handleDragStop}
+            >
                 <div ref={nodeRef} style={{
                     position: 'absolute',
                     cursor: 'move',
