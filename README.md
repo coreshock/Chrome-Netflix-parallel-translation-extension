@@ -61,9 +61,9 @@ A powerful Chrome Extension that adds a secondary, parallel subtitle track to Ne
 
 | Feature | Preview |
 | :--- | :--- |
-| **Main Interface** | *[Place screenshot of Netflix playing with dual subtitles here]* |
-| **Settings Popup** | *[Place screenshot of the extension popup menu here]* |
-| **Hover Tooltip** | *[Place screenshot of hovering over a word to see translation]* |
+| **Main Interface** | <img src="assets/netflix2.jpg" alt="Main Interface" width="400"/> |
+| **Settings Popup** | <img src="assets/netflix4.jpg" alt="Settings Popup" width="400"/> |
+| **Hover Tooltip** | <img src="assets/netflix3.jpg" alt="Hover Tooltip" width="400"/> |
 
 ## 📖 User Manual
 
