@@ -43,34 +43,49 @@ shadowRoot.appendChild(styleLink);
 const App = () => {
     const [original, setOriginal] = useState<string>('');
     const [translated, setTranslated] = useState<string>('');
-    const targetLang = useRef('ru');
-    const isEnabled = useRef(true); // Ref to track enabled state without re-renders affecting logic flow excessively
+    const [settings, setSettings] = useState({
+        targetLang: 'ru',
+        enabled: true,
+        fontSize: 28,
+        color: '#ffff00'
+    });
+
+    // Refs for safe access inside callbacks
+    const settingsRef = useRef(settings);
     const nodeRef = useRef(null);
+
+    // Keep ref in sync with state
+    useEffect(() => {
+        settingsRef.current = settings;
+    }, [settings]);
 
     useEffect(() => {
         // Load settings initially
-        chrome.storage.local.get(['targetLang', 'enabled'], (result) => {
-            if (result.targetLang) targetLang.current = result.targetLang;
-            if (result.enabled !== undefined) isEnabled.current = result.enabled;
+        chrome.storage.local.get(['targetLang', 'enabled', 'fontSize', 'color'], (result) => {
+            setSettings(prev => ({
+                ...prev,
+                targetLang: result.targetLang || prev.targetLang,
+                enabled: result.enabled !== undefined ? result.enabled : prev.enabled,
+                fontSize: result.fontSize || prev.fontSize,
+                color: result.color || prev.color
+            }));
         });
 
         // Listen for setting changes
         const messageListener = (request: any, sender: any, sendResponse: any) => {
             if (request.action === 'updateSettings') {
                 console.log('Settings updated:', request.payload);
-                if (request.payload.targetLang) targetLang.current = request.payload.targetLang;
-                if (request.payload.enabled !== undefined) {
-                    isEnabled.current = request.payload.enabled;
-                    // Clear translation immediately if disabled
-                    if (!isEnabled.current) setTranslated('');
-                }
+                setSettings(prev => {
+                    const next = { ...prev, ...request.payload };
+                    // Clear translation if disabled
+                    if (request.payload.enabled === false) setTranslated('');
+                    return next;
+                });
 
-                // Trigger re-translation if enabled and we have text
-                if (isEnabled.current && original) {
-                    translateText(original, 'auto', targetLang.current)
-                        .then(setTranslated)
-                        .catch(err => setTranslated('Err: ' + String(err)));
-                }
+                // Trigger re-translation if we have text and just enabled/changed language
+                // access new values from payload + prev state logic is tricky in async
+                // Simple approach: if enabled is true in payload or (current true and not changing), rely on effect or just let next mutation handle it.
+                // Actually, the easiest way is to re-run translation if language changed.
             }
         };
         chrome.runtime.onMessage.addListener(messageListener);
@@ -78,21 +93,22 @@ const App = () => {
         const observer = new SubtitleObserver(async (text) => {
             setOriginal(text);
 
-            // If empty text or Disabled, clear translation
-            if (!text || !text.trim() || !isEnabled.current) {
+            // Access latest settings via Ref
+            const current = settingsRef.current;
+
+            if (!text || !text.trim() || !current.enabled) {
                 setTranslated('');
                 return;
             }
 
             try {
-                const trans = await translateText(text, 'auto', targetLang.current);
-                if (isEnabled.current) setTranslated(trans);
+                const trans = await translateText(text, 'auto', current.targetLang);
+                if (settingsRef.current.enabled) setTranslated(trans);
             } catch (err) {
-                if (isEnabled.current) {
+                if (settingsRef.current.enabled) {
                     const errMsg = (err instanceof Error ? err.message : String(err));
                     if (errMsg.includes('Extension context invalidated') || errMsg.includes('reload')) {
                         setTranslated('⚠️ Update Installed. Please Reload Page.');
-                        // Add some visual style for the error? The default yellow text is fine, maybe add red later.
                     } else {
                         setTranslated('Err: ' + errMsg);
                     }
@@ -105,37 +121,40 @@ const App = () => {
             observer.stop();
             chrome.runtime.onMessage.removeListener(messageListener);
         };
-    }, [original]); // Keeping original dependency for re-translation logic if needed, though observer handles stream
+    }, []); // Hook only runs once, internal logic relies on refs/setters
 
-    // Don't unmount Draggable, just hide content if no translation/original
-    // actually, we want to hide if there is no *translated* text to show (or original if debugging)
-    // If we return null, Draggable resets. So we must always return the Draggable structure.
+    // Re-trigger translation when settings that affect output logic change (Language)
+    // We can't easily re-run the observer's callback, but we can manually triggering translation if we have 'original'.
+    useEffect(() => {
+        if (original && settings.enabled) {
+            translateText(original, 'auto', settings.targetLang)
+                .then(t => { if (settings.enabled) setTranslated(t); })
+                .catch(e => console.error(e));
+        }
+    }, [settings.targetLang, settings.enabled]);
 
-    const isVisible = (original && isEnabled.current && translated);
+
+    const isVisible = (original && settings.enabled && translated);
 
     return (
         <div style={{ pointerEvents: 'none', width: '100vw', height: '100vh', position: 'fixed', top: 0, left: 0 }}>
-            {/* 
-                bounds="parent" limits to screen. 
-                We keep this mounted even if empty.
-            */}
             <Draggable nodeRef={nodeRef} bounds="parent" defaultPosition={{ x: window.innerWidth / 2 - 200, y: window.innerHeight - 150 }}>
                 <div ref={nodeRef} style={{
                     position: 'absolute',
                     cursor: 'move',
-                    pointerEvents: isVisible ? 'auto' : 'none', // Only clickable when visible
+                    pointerEvents: isVisible ? 'auto' : 'none',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     width: 'fit-content',
                     maxWidth: '80%',
                     zIndex: 2147483647,
-                    opacity: isVisible ? 1 : 0, // Visually hide but keep in DOM for position persistence
+                    opacity: isVisible ? 1 : 0,
                     transition: 'opacity 0.2s ease-in-out'
                 }}>
                     <div style={{
-                        color: '#ffff00',
-                        fontSize: '28px',
+                        color: settings.color,
+                        fontSize: `${settings.fontSize}px`,
                         fontWeight: '700',
                         textAlign: 'center',
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',

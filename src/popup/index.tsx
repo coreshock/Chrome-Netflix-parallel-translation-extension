@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import '../index.css'; // Global Tailwind
+// import '../index.css'; // Removed to prevent build resolution errors, CSS is loaded via HTML
 
 declare const chrome: any;
 
