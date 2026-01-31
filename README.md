@@ -1,73 +1,82 @@
-# React + TypeScript + Vite
+# Netflix Parallel Translation (Chrome Extension)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A powerful Chrome Extension that adds a secondary, parallel subtitle track to Netflix. Perfect for language learners who want to see their native language and the target language simultaneously.
 
-Currently, two official plugins are available:
+![Screenshot of Extension in Action](https://raw.githubusercontent.com/antigravity-agent/assets/main/netflix-parallel-subs-demo.png) *(Placeholder image)*
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🌟 Key Features
 
-## React Compiler
+*   **Dual Subtitles**: Displays a secondary subtitle track (translation) overlaid on the Netflix player.
+*   **Instant Hover Translation**: Hover your mouse over any word in the translated subtitle to see a quick "tooltip" definition/reverse-translation.
+    *   **Smart Auto-Flip**: Automatically detects language direction or lets you manually set the target language.
+*   **Smart Positioning**:
+    *   **Drag & Drop**: Move the subtitle box anywhere on the screen.
+    *   **Persistent Position**: Remembers your preferred position **separately** for Windowed Mode and Fullscreen Mode. Reloading the page or switching modes restores your exact layout.
+*   **Customizable UI**:
+    *   Change Font Size (16px - 48px).
+    *   Change Text Color (Yellow, White, Green, Cyan, Magenta, Red).
+    *   Toggle Visibility instantly.
+*   **Zero-Impact Overlay**: Uses advanced techniques to prevent Netflix's video player from turning black (DRM protection safelist) or blocking standard controls.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🚀 Installation
 
-## Expanding the ESLint configuration
+### For Developers / Manual Installation
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1.  **Clone the Repository**:
+    ```bash
+    git clone https://github.com/your-username/netflix-parallel-translation.git
+    cd netflix-parallel-translation
+    ```
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+2.  **Install Dependencies**:
+    ```bash
+    npm install
+    # or
+    yarn install
+    ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+3.  **Build the Project**:
+    ```bash
+    npm run build
+    ```
+    *This will compile the TypeScript code and generate the `dist` folder.*
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+4.  **Load into Chrome**:
+    *   Open Google Chrome and navigate to `chrome://extensions/`.
+    *   Enable **"Developer mode"** (top right switch).
+    *   Click **"Load unpacked"**.
+    *   Select the `dist` folder from this project directory.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 📖 User Manual
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Getting Started
+1.  Open Netflix and start playing a video.
+2.  Ensure standard Netflix subtitles are enabled (this extension reads the primary subtitle track).
+3.  The **Parallel Translation** box will appear automatically.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Configuring Settings
+Click the **Extension Icon** in your browser toolbar (or pin it for easy access) to open the control panel:
+*   **Enable Translation**: Toggle the feature on/off.
+*   **Main Language**: Select the target language you want to translate TO (e.g., Russian, English, Spanish).
+*   **Hover Tooltip**: Choose which language you want to translate individual words into when hovering. "Smart (Auto-Flip)" usually works best.
+*   **Appearance**: Adjust the slider for drag size and pick a high-contrast color.
+
+### Positioning
+*   **Drag** the subtitle box to move it.
+*   **Fullscreen**: The extension remembers a specific position for Fullscreen usage.
+*   **Windowed**: It remembers a separate position for windowed usage.
+*   **Reset**: If you ever lose the box, just reload the page; it will appear near the bottom-center by default if no position was saved, or at your last saved spot.
+
+## 🛠 Tech Stack
+
+*   **Frontend**: React 18, TypeScript, TailwindCSS
+*   **Build Tool**: Vite + ESBuild
+*   **Architecture**:
+    *   **Content Script**: Injects a Shadow DOM overlay into Netflix to avoid style conflicts.
+    *   **Popup**: a React app for settings management.
+    *   **Communication**: `chrome.runtime` messaging for instant settings sync between Popup and Overlay.
+    *   **Persistence**: `chrome.storage.local` for saving user preferences and positions.
+
+## 📄 License
+
+MIT License. Feel free to fork and improve!
