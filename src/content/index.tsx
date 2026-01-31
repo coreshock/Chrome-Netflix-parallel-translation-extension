@@ -86,13 +86,16 @@ const App = () => {
 
             try {
                 const trans = await translateText(text, 'auto', targetLang.current);
-                // Double check enabled state before setting (async race condition)
-                if (isEnabled.current) {
-                    setTranslated(trans);
-                }
+                if (isEnabled.current) setTranslated(trans);
             } catch (err) {
                 if (isEnabled.current) {
-                    setTranslated('Err: ' + (err instanceof Error ? err.message : String(err)));
+                    const errMsg = (err instanceof Error ? err.message : String(err));
+                    if (errMsg.includes('Extension context invalidated') || errMsg.includes('reload')) {
+                        setTranslated('⚠️ Update Installed. Please Reload Page.');
+                        // Add some visual style for the error? The default yellow text is fine, maybe add red later.
+                    } else {
+                        setTranslated('Err: ' + errMsg);
+                    }
                 }
             }
         });
