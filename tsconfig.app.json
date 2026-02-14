@@ -10,7 +10,8 @@
     ],
     "module": "ESNext",
     "types": [
-      "vite/client"
+      "vite/client",
+      "chrome"
     ],
     "skipLibCheck": true,
     /* Bundler mode */
@@ -29,6 +30,12 @@
     "noUncheckedSideEffectImports": true
   },
   "include": [
-    "src"
+    "src/main.tsx",
+    "src/background/index.ts",
+    "src/content/index.tsx",
+    "src/popup/index.tsx",
+    "src/vite-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx"
   ]
 }

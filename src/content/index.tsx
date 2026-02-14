@@ -120,7 +120,7 @@ const App = () => {
         document.addEventListener('fullscreenchange', handleFs);
 
         // Load Settings
-        chrome.storage.local.get(['targetLang', 'hoverTargetLang', 'enabled', 'fontSize', 'color', 'windowPos', 'fullscreenPos'], (result) => {
+        chrome.storage.local.get(['targetLang', 'hoverTargetLang', 'enabled', 'fontSize', 'color', 'windowPos', 'fullscreenPos'], (result: { [key: string]: any }) => {
             setSettings(prev => ({
                 ...prev,
                 targetLang: result.targetLang || prev.targetLang,
@@ -133,7 +133,7 @@ const App = () => {
             }));
         });
 
-        const messageListener = (request: any) => {
+        const messageListener = (request: any, _sender: chrome.runtime.MessageSender, _sendResponse: (response?: any) => void) => {
             if (request.action === 'updateSettings') {
                 setSettings(prev => {
                     const next = { ...prev, ...request.payload };
