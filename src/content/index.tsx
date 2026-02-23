@@ -37,7 +37,7 @@ if (!shadowRoot) {
 // Inject Styles into Shadow DOM (Manually fetching CSS from extension assets)
 const styleLink = document.createElement('link');
 styleLink.rel = 'stylesheet';
-styleLink.href = chrome.runtime.getURL('assets/content.css');
+styleLink.href = chrome.runtime.getURL('assets/popup.css');
 shadowRoot.appendChild(styleLink);
 
 // Helper to split text into words and separators
