@@ -32,28 +32,31 @@ const Popup = () => {
     const [targetLang, setTargetLang] = useState('ru');
     const [hoverTargetLang, setHoverTargetLang] = useState('auto');
     const [enabled, setEnabled] = useState(true);
+    const [showOriginal, setShowOriginal] = useState(true);
     const [fontSize, setFontSize] = useState(28);
     const [color, setColor] = useState('#ffff00');
     const [status, setStatus] = useState('');
 
     useEffect(() => {
         // Load saved settings
-        chrome.storage.local.get(['targetLang', 'hoverTargetLang', 'enabled', 'fontSize', 'color'], (result: any) => {
+        chrome.storage.local.get(['targetLang', 'hoverTargetLang', 'enabled', 'showOriginal', 'fontSize', 'color'], (result: any) => {
             if (result.targetLang) setTargetLang(result.targetLang);
             if (result.hoverTargetLang) setHoverTargetLang(result.hoverTargetLang);
             if (result.enabled !== undefined) setEnabled(result.enabled);
+            if (result.showOriginal !== undefined) setShowOriginal(result.showOriginal);
             if (result.fontSize) setFontSize(result.fontSize);
             if (result.color) setColor(result.color);
         });
     }, []);
 
     const saveSettings = (updates: any) => {
-        const newState = { targetLang, hoverTargetLang, enabled, fontSize, color, ...updates };
+        const newState = { targetLang, hoverTargetLang, enabled, showOriginal, fontSize, color, ...updates };
 
         // Update local state first for responsiveness
         if (updates.targetLang) setTargetLang(updates.targetLang);
         if (updates.hoverTargetLang) setHoverTargetLang(updates.hoverTargetLang);
         if (updates.enabled !== undefined) setEnabled(updates.enabled);
+        if (updates.showOriginal !== undefined) setShowOriginal(updates.showOriginal);
         if (updates.fontSize) setFontSize(updates.fontSize);
         if (updates.color) setColor(updates.color);
 
@@ -71,128 +74,137 @@ const Popup = () => {
     };
 
     return (
-        <div className="w-[320px] min-h-[400px] bg-[#1a1b1e] text-slate-100 font-sans overflow-hidden shadow-2xl selection:bg-red-500 selection:text-white">
+        <div className="w-80 min-h-[350px] bg-slate-900 text-slate-100 font-sans overflow-hidden selection:bg-red-500 selection:text-white">
             {/* Header */}
-            <div className="bg-gradient-to-r from-red-700 to-red-900 p-4 shadow-lg flex items-center justify-between">
-                <h1 className="text-xl font-bold tracking-tight flex items-center gap-3 text-white">
-                    <span className="text-2xl">文A</span>
-                    <span>Netflix Translator</span>
+            <div className="bg-gradient-to-r from-red-600 to-red-800 p-3 shadow-lg flex items-center justify-between">
+                <h1 className="text-base font-bold tracking-wide flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
+                    Netflix Translator
                 </h1>
-                <div className="text-[10px] opacity-75 font-mono">
-                    v{chrome?.runtime?.getManifest?.()?.version || '1.3.2'}
-                </div>
+                <div className="text-[10px] opacity-75 font-mono">v1.3.2</div>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-4 space-y-4">
 
                 {/* Enable Switch */}
-                <div className="flex items-center justify-between">
-                    <span className="font-medium text-white text-[15px]">Enable Translation</span>
+                <div className="flex items-center justify-between bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50">
+                    <span className="font-medium text-slate-300 text-sm">Enable Translation</span>
                     <button
                         onClick={() => saveSettings({ enabled: !enabled })}
-                        className={`relative w-14 h-8 flex items-center rounded-full p-1 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-[#1a1b1e] ${enabled ? 'bg-green-500' : 'bg-gray-600'}`}
+                        className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${enabled ? 'bg-green-500' : 'bg-slate-600'}`}
                     >
-                        <span
-                            className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-transform duration-200 ${enabled ? 'translate-x-[24px]' : 'translate-x-0'}`}
-                        />
+                        {/* Centered Circle: top-1/2 -translate-y-1/2 ensures perfect vertical centering */}
+                        <div className={`absolute top-1/2 -translate-y-1/2 left-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 shadow-sm ${enabled ? 'translate-x-5' : 'translate-x-0'}`} />
                     </button>
                 </div>
 
-                {/* Dropdowns Container */}
-                <div className="space-y-4">
+                <div className={`space-y-4 transition-opacity duration-200 ${enabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+
+                    {/* Show Original Switch */}
+                    <div className="flex items-center justify-between bg-slate-800/50 p-2.5 rounded-xl border border-slate-700/50">
+                        <span className="font-medium text-slate-300 text-sm">Show Original Subtitles</span>
+                        <button
+                            onClick={() => saveSettings({ showOriginal: !showOriginal })}
+                            className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${showOriginal ? 'bg-blue-500' : 'bg-slate-600'}`}
+                        >
+                            <div className={`absolute top-1/2 -translate-y-1/2 left-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 shadow-sm ${showOriginal ? 'translate-x-5' : 'translate-x-0'}`} />
+                        </button>
+                    </div>
+
                     {/* Target Language */}
-                    <div className="relative group">
-                        <div className="absolute -top-2.5 left-3 px-1.5 bg-[#1a1b1e] text-[10px] font-bold text-gray-400 uppercase tracking-wider z-10">
-                            Main Subtitle Language
-                        </div>
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Main Subtitle Language</label>
                         <div className="relative">
                             <select
                                 value={targetLang}
                                 onChange={(e) => saveSettings({ targetLang: e.target.value })}
-                                className="w-full bg-transparent text-gray-200 border border-gray-600 rounded-xl p-3.5 pl-4 pr-10 text-[15px] appearance-none focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all cursor-pointer hover:border-gray-500"
+                                className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2 pl-3 pr-8 text-sm appearance-none focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition-all hover:bg-slate-750"
                             >
                                 {LANGUAGES.map(lang => (
-                                    <option key={lang.code} value={lang.code} className="bg-[#1a1b1e]">
+                                    <option key={lang.code} value={lang.code}>
                                         {lang.name}
                                     </option>
                                 ))}
                             </select>
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <div className="absolute right-3 top-2.5 pointer-events-none text-slate-400">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                             </div>
                         </div>
                     </div>
 
                     {/* Hover Language */}
-                    <div className="relative group">
-                        <div className="absolute -top-2.5 left-3 px-1.5 bg-[#1a1b1e] text-[10px] font-bold text-gray-400 uppercase tracking-wider z-10">
-                            Hover Tooltip Language
-                        </div>
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Hover Tooltip Language</label>
                         <div className="relative">
                             <select
                                 value={hoverTargetLang}
                                 onChange={(e) => saveSettings({ hoverTargetLang: e.target.value })}
-                                className="w-full bg-transparent text-gray-200 border border-gray-600 rounded-xl p-3.5 pl-4 pr-10 text-[15px] appearance-none focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all cursor-pointer hover:border-gray-500"
+                                className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2 pl-3 pr-8 text-sm appearance-none focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition-all hover:bg-slate-750"
                             >
-                                <option value="auto" className="bg-[#1a1b1e]">✨ Smart (Auto-Flip)</option>
+                                <option value="auto">✨ Smart (Auto-Flip)</option>
                                 {LANGUAGES.map(lang => (
-                                    <option key={lang.code} value={lang.code} className="bg-[#1a1b1e]">
+                                    <option key={lang.code} value={lang.code}>
                                         {lang.name}
                                     </option>
                                 ))}
                             </select>
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <div className="absolute right-3 top-2.5 pointer-events-none text-slate-400">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Appearance Section */}
+                    <div className="space-y-3 pt-1 border-t border-slate-800/50">
+                        {/* Font Size */}
+                        <div className="space-y-1">
+                            <div className="flex justify-between text-xs text-slate-400">
+                                <span>Size</span>
+                                <span className="text-slate-200">{fontSize}px</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="16"
+                                max="48"
+                                step="2"
+                                value={fontSize}
+                                onChange={(e) => saveSettings({ fontSize: Number(e.target.value) })}
+                                className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500 hover:accent-red-400"
+                            />
+                        </div>
+
+                        {/* Color Picker */}
+                        <div className="space-y-1">
+                            <div className="flex justify-between text-xs text-slate-400">
+                                <span>Color</span>
+                            </div>
+                            <div className="flex gap-1.5 flex-wrap">
+                                {PRESET_COLORS.map(c => (
+                                    <button
+                                        key={c}
+                                        onClick={() => saveSettings({ color: c })}
+                                        className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${color === c ? 'border-white scale-110 shadow-lg' : 'border-transparent'}`}
+                                        style={{ backgroundColor: c }}
+                                    />
+                                ))}
+                                <div className="relative w-6 h-6 rounded-full overflow-hidden border-2 border-slate-600 hover:border-slate-400 transition-colors">
+                                    <input
+                                        type="color"
+                                        value={color}
+                                        onChange={(e) => saveSettings({ color: e.target.value })}
+                                        className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] p-0 m-0 border-0 cursor-pointer"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Size Slider */}
-                <div className="space-y-4 pt-2">
-                    <div className="flex items-center justify-between gap-4">
-                        <span className="text-[15px] font-medium text-white min-w-[30px]">Size</span>
-                        <input
-                            type="range"
-                            min="16"
-                            max="48"
-                            step="2"
-                            value={fontSize}
-                            onChange={(e) => saveSettings({ fontSize: Number(e.target.value) })}
-                            className="flex-1 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-red-600 hover:accent-red-500"
-                        />
-                        <span className="text-[15px] text-gray-400 font-mono w-[40px] text-right">{fontSize}px</span>
-                    </div>
-                </div>
+            </div>
 
-                {/* Color Picker */}
-                <div className="flex justify-between items-center pt-1">
-                    {PRESET_COLORS.map(c => (
-                        <button
-                            key={c}
-                            onClick={() => saveSettings({ color: c })}
-                            className={`w-9 h-9 rounded-full transition-all duration-200 flex items-center justify-center ${color === c ? 'transform scale-110 ring-2 ring-white ring-offset-2 ring-offset-[#1a1b1e]' : 'hover:scale-105'}`}
-                            style={{ backgroundColor: c }}
-                        />
-                    ))}
-                    <div className="relative w-9 h-9 rounded-full overflow-hidden ring-2 ring-gray-600 hover:ring-gray-400 transition-all ml-1">
-                        <input
-                            type="color"
-                            value={color}
-                            onChange={(e) => saveSettings({ color: e.target.value })}
-                            className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] p-0 m-0 border-0 cursor-pointer opacity-0"
-                        />
-                        <div className="w-full h-full bg-gradient-to-tr from-blue-500 to-purple-500" /> {/* Placeholder visual for custom */}
-                    </div>
-                </div>
-
-                {/* Footer */}
-                <div className="text-center pt-2">
-                    <p className="text-[11px] text-gray-500">
-                        Pro tip: Drag the subtitle box to move it.
-                    </p>
-                </div>
-
+            {/* Footer / Status */}
+            <div className="bg-slate-950 p-2 text-center text-[10px] text-slate-600 border-t border-slate-800">
+                {status || 'Pro tip: Drag the subtitle box to move it.'}
             </div>
         </div>
     );
