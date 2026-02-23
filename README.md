@@ -1,4 +1,4 @@
-# Netflix Parallel Translation (Chrome Extension)
+# <img src="public/icon.png" width="48" align="absmiddle" /> Netflix Parallel Translation (Chrome Extension)
 
 A powerful Chrome Extension that adds a secondary, parallel subtitle track to Netflix. Perfect for language learners who want to see their native language and the target language simultaneously.
 
@@ -61,9 +61,9 @@ A powerful Chrome Extension that adds a secondary, parallel subtitle track to Ne
 
 | Feature | Preview |
 | :--- | :--- |
-| **Main Interface** | <img src="assets/netflix2.jpg" alt="Main Interface" width="400"/> |
-| **Settings Popup** | <img src="assets/netflix4.jpg" alt="Settings Popup" width="400"/> |
-| **Hover Tooltip** | <img src="assets/netflix3.jpg" alt="Hover Tooltip" width="400"/> |
+| **Main Interface** | <img src="https://github.com/coreshock/Chrome-Netflix-parallel-translation-extension/raw/main/assets/netflix4.jpg" width="400" /> |
+| **Settings Popup** | <img src="https://github.com/coreshock/Chrome-Netflix-parallel-translation-extension/raw/main/assets/netflix2.jpg" width="400" /> |
+| **Hover Tooltip** | <img src="https://github.com/coreshock/Chrome-Netflix-parallel-translation-extension/raw/main/assets/netflix3.jpg" width="400" /> |
 
 ## 📖 User Manual
 

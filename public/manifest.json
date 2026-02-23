@@ -13,6 +13,11 @@
         "https://www.netflix.com/*",
         "https://www.youtube.com/*"
     ],
+    "icons": {
+        "16": "icon.png",
+        "48": "icon.png",
+        "128": "icon.png"
+    },
     "action": {
         "default_popup": "index.html",
         "default_icon": "icon.png"

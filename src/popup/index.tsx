@@ -78,7 +78,9 @@ const Popup = () => {
                     <span className="text-2xl">文A</span>
                     <span>Netflix Translator</span>
                 </h1>
-                <div className="text-xs font-mono text-red-200 opacity-80">v1.3.2</div>
+                <div className="text-[10px] opacity-75 font-mono">
+                    v{chrome?.runtime?.getManifest?.()?.version || '1.3.2'}
+                </div>
             </div>
 
             <div className="p-6 space-y-6">
