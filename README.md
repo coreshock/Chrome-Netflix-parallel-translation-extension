@@ -1,4 +1,4 @@
-# <img src="public/icon.png" width="48" align="absmiddle" /> Netflix Parallel Translation (Chrome Extension)
+# <img src="https://github.com/coreshock/Chrome-Netflix-parallel-translation-extension/raw/main/public/icon.png" width="48" align="absmiddle" /> Netflix Parallel Translation (Chrome Extension)
 
 A powerful Chrome Extension that adds a secondary, parallel subtitle track to Netflix. Perfect for language learners who want to see their native language and the target language simultaneously.
 
