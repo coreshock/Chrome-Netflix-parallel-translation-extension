@@ -34,17 +34,18 @@
                 "https://www.youtube.com/*"
             ],
             "js": [
-                "content.js"
+                "content-loader.js"
             ],
-            "css": [
-                "assets/popup.css"
-            ],
+            "css": [],
             "run_at": "document_end"
         }
     ],
     "web_accessible_resources": [
         {
             "resources": [
+                "content.js",
+                "popup.css",
+                "icon.png",
                 "assets/*"
             ],
             "matches": [

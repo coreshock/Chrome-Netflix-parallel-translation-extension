@@ -49,14 +49,17 @@ export class SubtitleObserver {
         }
 
         if (element && element !== this.currentSubtitleElement) {
-            console.log('Subtitle container found:', element);
+            console.log('Netflix Translation: Subtitle container found:', element);
             this.currentSubtitleElement = element;
 
             // Callback immediately with current text if any
             this.handleMutation();
 
             // Start observing
-            this.observer = new MutationObserver(() => this.handleMutation());
+            this.observer = new MutationObserver(() => {
+                // console.log('Netflix Translation: Mutation detected');
+                this.handleMutation();
+            });
             this.observer.observe(element, {
                 childList: true,
                 subtree: true,

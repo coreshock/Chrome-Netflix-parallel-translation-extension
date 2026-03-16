@@ -37,7 +37,7 @@ if (!shadowRoot) {
 // Inject Styles into Shadow DOM (Manually fetching CSS from extension assets)
 const styleLink = document.createElement('link');
 styleLink.rel = 'stylesheet';
-styleLink.href = chrome.runtime.getURL('assets/popup.css');
+styleLink.href = chrome.runtime.getURL('popup.css');
 shadowRoot.appendChild(styleLink);
 
 // Helper to split text into words and separators
@@ -151,27 +151,9 @@ const App = () => {
     }, []);
 
 
-    const observer = new SubtitleObserver(async (text) => {
-        setOriginal(text);
-        const current = settingsRef.current;
-
-        if (!text || !text.trim() || !current.enabled) {
-            setTranslated('');
-            return;
-        }
-
-        try {
-            const trans = await translateText(text, 'auto', current.targetLang);
-            if (settingsRef.current.enabled) setTranslated(trans);
-        } catch (err: any) {
-            if (settingsRef.current.enabled) {
-                const errMsg = err.message || String(err);
-                setTranslated(errMsg.includes('context invalidated') ? '⚠️ Please Reload' : 'Err: ' + errMsg);
-            }
-        }
-    });
     useEffect(() => {
         const observer = new SubtitleObserver(async (text) => {
+            if (text) console.log('Netflix Translation: Native subtitle detected:', text);
             setOriginal(text);
             const current = settingsRef.current;
 
@@ -181,9 +163,12 @@ const App = () => {
             }
 
             try {
+                console.log('Netflix Translation: Requesting translation...');
                 const trans = await translateText(text, 'auto', current.targetLang);
+                console.log('Netflix Translation: Translation received:', trans);
                 if (settingsRef.current.enabled) setTranslated(trans);
             } catch (err: any) {
+                console.error('Netflix Translation: Translation error:', err);
                 if (settingsRef.current.enabled) {
                     const errMsg = err.message || String(err);
                     setTranslated(errMsg.includes('context invalidated') ? '⚠️ Please Reload' : 'Err: ' + errMsg);
@@ -197,13 +182,7 @@ const App = () => {
         };
     }, []);
 
-    useEffect(() => {
-        if (original && settings.enabled) {
-            translateText(original, 'auto', settings.targetLang)
-                .then(t => { if (settings.enabled) setTranslated(t); })
-                .catch(e => console.error(e));
-        }
-    }, [original, settings.targetLang, settings.enabled]);
+
 
     // Handle Word Hover
     const handleWordEnter = (word: string, e: React.MouseEvent) => {
