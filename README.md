@@ -24,7 +24,7 @@ A powerful Chrome Extension that adds a secondary, parallel subtitle track to Ne
 ### Option 1: Easy Install (Pre-compiled)
 
 1.  **Download the Release**:
-    *   Download `netflix-parallel-translation-v1.3.2.zip` from the releases page (or the root of this repo).
+    *   Download `netflix-parallel-translation-v1.3.3.zip` from the releases page (or the root of this repo).
     *   **Unzip** the file to a folder (e.g., `Documents/NetflixExtension`).
 
 2.  **Load into Chrome**:
